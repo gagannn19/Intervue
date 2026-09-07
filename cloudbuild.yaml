@@ -1,0 +1,63 @@
+# Cloud Build pipeline: build -> tag with commit SHA -> push to Artifact
+# Registry -> deploy that exact image to Cloud Run.
+#
+# Triggered on every push/merge to `master` (see DEPLOY.md for the trigger).
+# $PROJECT_ID and $COMMIT_SHA are provided automatically by Cloud Build.
+
+substitutions:
+  _REGION: "asia-south1"
+  _AR_REPO: "intervue-frontend"
+  _SERVICE: "intervue-frontend"
+  # Public backend API base URL, baked into the static bundle at build time.
+  # NOT a secret. Override per-environment on the trigger.
+  _VITE_API_URL: "https://REPLACE-WITH-YOUR-BACKEND-HOST/api"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_HIGHCPU_8"
+
+images:
+  - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPO}/${_SERVICE}:${COMMIT_SHA}"
+
+steps:
+  # 1. Build the production image, pinned to this commit.
+  - id: build
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--build-arg"
+      - "VITE_API_URL=${_VITE_API_URL}"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPO}/${_SERVICE}:${COMMIT_SHA}"
+      - "."
+
+  # 2. Push the immutable, SHA-tagged image to Artifact Registry.
+  - id: push
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPO}/${_SERVICE}:${COMMIT_SHA}"
+
+  # 3. Deploy that exact image (by SHA, never `latest`) to Cloud Run.
+  #    Each deploy creates a new revision automatically.
+  - id: deploy
+    name: "gcr.io/google-cloud-sdk/cloud-sdk:slim"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE}"
+      - "--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPO}/${_SERVICE}:${COMMIT_SHA}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--port=8080"
+      - "--allow-unauthenticated"
+      - "--cpu=1"
+      - "--memory=512Mi"
+      - "--min-instances=0"
+      - "--max-instances=3"
+      - "--concurrency=80"
+      # No --set-env-vars: this is a static bundle. VITE_API_URL is a
+      # build-time value (baked in at step 1), not a runtime nginx setting.
+
+timeout: "1200s"

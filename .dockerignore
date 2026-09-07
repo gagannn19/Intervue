@@ -1,0 +1,26 @@
+# Keep the build context small and free of local/dev cruft.
+.git
+.github
+node_modules
+dist
+dist-ssr
+
+# Local env — never ship these into an image. .env.example stays.
+.env
+.env.*
+!.env.example
+
+# Tooling / editor / OS
+.vscode
+.idea
+.DS_Store
+*.log
+npm-debug.log*
+
+# Infra files not needed inside the image
+Dockerfile
+.dockerignore
+.gcloudignore
+cloudbuild.yaml
+DEPLOY.md
+README.md

@@ -1,0 +1,28 @@
+name: CI
+
+# Runs on every PR into master and on direct pushes to master.
+# Deployment is handled by Google Cloud Build, not here — this job only
+# gates PRs on lint + a clean production build.
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run build
