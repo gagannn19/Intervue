@@ -41,7 +41,7 @@ steps:
   # 3. Deploy that exact image (by SHA, never `latest`) to Cloud Run.
   #    Each deploy creates a new revision automatically.
   - id: deploy
-    name: "gcr.io/google-cloud-sdk/cloud-sdk:slim"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     entrypoint: "gcloud"
     args:
       - "run"
