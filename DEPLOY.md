@@ -13,7 +13,8 @@ feature branch → PR → merge to master → Cloud Build trigger
 | Cloud Run service | `intervue-frontend` |
 | Region | `asia-south1` |
 | Artifact Registry repo | `intervue-frontend` |
-| Image | `asia-south1-docker.pkg.dev/$PROJECT_ID/intervue-frontend/intervue-frontend:$COMMIT_SHA` |
+| GCP project | `cuecast-507920` |
+| Image | `asia-south1-docker.pkg.dev/cuecast-507920/intervue-frontend/intervue-frontend:$COMMIT_SHA` |
 | Production branch | `master` |
 | Container port | `8080` (nginx, non-root) |
 | Public? | Yes — `--allow-unauthenticated` |
@@ -32,7 +33,7 @@ project. Run it once.
 
 ```bash
 # ---- 0. Variables -------------------------------------------------------
-export PROJECT_ID="YOUR_PROJECT_ID"          # <-- set me
+export PROJECT_ID="cuecast-507920"
 export REGION="asia-south1"
 export AR_REPO="intervue-frontend"
 export SERVICE="intervue-frontend"
