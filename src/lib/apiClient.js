@@ -1,23 +1,29 @@
 // A small fetch wrapper shared by every service that talks to the
-// backend. Handles the base URL, JSON parsing, attaching the auth token,
-// and turning a failed response into a thrown Error with a useful message.
+// backend. Handles the base URL, JSON parsing, attaching the Firebase ID
+// token, and turning a failed response into a thrown Error with a useful
+// message.
+
+import { auth } from "./firebase";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
-const TOKEN_KEY = "intervue_token";
 
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+// The backend authenticates requests by verifying the current user's
+// Firebase ID token. getIdToken() returns a cached token and refreshes it
+// automatically when it's close to expiring.
+async function getIdToken() {
+  const user = auth?.currentUser;
+  if (!user) return null;
+  try {
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
 }
 
-export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
-}
-
-export async function apiRequest(path, { method = "GET", body, auth = false } = {}) {
+export async function apiRequest(path, { method = "GET", body, auth: needsAuth = false } = {}) {
   const headers = { "Content-Type": "application/json" };
-  if (auth) {
-    const token = getToken();
+  if (needsAuth) {
+    const token = await getIdToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
