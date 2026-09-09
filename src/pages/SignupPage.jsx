@@ -3,11 +3,12 @@ import { Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
+import { GoogleButton } from "../components/auth/GoogleButton";
 import { disp, themeVars } from "../constants/theme";
 
 const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#6D5EF8]";
 
-export function SignupPage({ onSignup, onGoToLogin, onBack, dark, onToggleDark }) {
+export function SignupPage({ onSignup, onGoogle, onGoToLogin, onBack, dark, onToggleDark }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +23,18 @@ export function SignupPage({ onSignup, onGoToLogin, onBack, dark, onToggleDark }
       await onSignup({ name, email, password });
     } catch (err) {
       setError(err.message || "Something went wrong creating your account.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onGoogle();
+    } catch (err) {
+      setError(err.message || "Something went wrong signing up with Google.");
     } finally {
       setSubmitting(false);
     }
@@ -58,12 +71,20 @@ export function SignupPage({ onSignup, onGoToLogin, onBack, dark, onToggleDark }
               <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} placeholder="At least 6 characters" />
             </div>
 
-            {error && <p className="text-[13px] text-[#E24468]">{error}</p>}
-
             <GradientButton type="submit" disabled={submitting} className="w-full py-2.5">
               {submitting ? <Loader2 size={15} className="animate-spin" /> : <>Create account <ChevronRight size={15} /></>}
             </GradientButton>
           </form>
+
+          <div className="flex items-center gap-3 my-4">
+            <div className="h-px flex-1 bg-[var(--ink)]/10" />
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink)]/40">or</span>
+            <div className="h-px flex-1 bg-[var(--ink)]/10" />
+          </div>
+
+          <GoogleButton onClick={handleGoogle} disabled={submitting} label="Sign up with Google" />
+
+          {error && <p className="text-[13px] text-[#E24468] mt-4">{error}</p>}
 
           <p className="text-[13px] text-[var(--ink)]/55 mt-5 text-center">
             Already have an account?{" "}

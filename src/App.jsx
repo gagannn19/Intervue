@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFonts } from "./hooks/useFonts";
 import { useTheme } from "./hooks/useTheme";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth } from "./context/AuthContext";
 import { useInterviews } from "./hooks/useInterviews";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import * as interviewService from "./services/interviewService";
@@ -94,11 +94,11 @@ export default function App() {
   }
 
   if (nav.screen === "login") {
-    return <LoginPage onLogin={auth.login} onGoToSignup={nav.goToSignup} onBack={nav.goToLanding} dark={dark} onToggleDark={toggleDark} />;
+    return <LoginPage onLogin={auth.login} onGoogle={auth.loginWithGoogle} onGoToSignup={nav.goToSignup} onBack={nav.goToLanding} dark={dark} onToggleDark={toggleDark} />;
   }
 
   if (nav.screen === "signup") {
-    return <SignupPage onSignup={auth.signup} onGoToLogin={nav.goToLogin} onBack={nav.goToLanding} dark={dark} onToggleDark={toggleDark} />;
+    return <SignupPage onSignup={auth.signup} onGoogle={auth.loginWithGoogle} onGoToLogin={nav.goToLogin} onBack={nav.goToLanding} dark={dark} onToggleDark={toggleDark} />;
   }
 
   if (nav.screen === "room" && nav.activeConfig) {
