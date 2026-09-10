@@ -6,12 +6,42 @@ import { apiRequest } from "../lib/apiClient";
 // aiService.js) — only the final score/summary gets persisted here.
 // ---------------------------------------------------------------------------
 
-export async function scheduleInterview({ difficulty, duration, date, time, role, instructions }) {
+// `company`, `position`, `salaryMin`, `salaryMax` and `type` are optional —
+// the old "Custom Settings" form doesn't send them, and the backend stores
+// null for those columns in that case. `undefined` values are dropped by
+// JSON.stringify, so the request body stays identical to before for the
+// custom path.
+export async function scheduleInterview({
+  difficulty,
+  duration,
+  date,
+  time,
+  role,
+  instructions,
+  type,
+  company,
+  position,
+  salaryMin,
+  salaryMax,
+}) {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return apiRequest("/interviews", {
     method: "POST",
     auth: true,
-    body: { difficulty, duration, date, time, role, customInstructions: instructions, timezone },
+    body: {
+      difficulty,
+      duration,
+      date,
+      time,
+      role,
+      customInstructions: instructions,
+      timezone,
+      type,
+      company,
+      position,
+      salaryMin,
+      salaryMax,
+    },
   });
 }
 
@@ -30,15 +60,29 @@ export async function startInterview(interviewId) {
   return apiRequest(`/interviews/${interviewId}/start`, { method: "POST", auth: true });
 }
 
-// Persists the result. score/feedbackSummary come from the frontend's local
-// mock heuristic (see aiService.generateFeedback) — the backend clearly
-// tags it as a mock result, since there's no real AI evaluator yet.
-export async function completeInterview(interviewId, { score, feedbackSummary }) {
+// Fallback completion only. Since Phase 3.5 the visible result comes from
+// generateReport() below; this is used just to make sure an interview
+// isn't left stuck IN_PROGRESS if report generation fails hard. Passing an
+// empty body leaves score null and a neutral summary.
+export async function completeInterview(interviewId, { score, feedbackSummary } = {}) {
   return apiRequest(`/interviews/${interviewId}/complete`, {
     method: "POST",
     auth: true,
     body: { score, feedbackSummary },
   });
+}
+
+// Phase 3.5 — finish the interview and get the authoritative final report.
+// The backend aggregates the stored per-question evaluations (Phase 3.3),
+// optionally has Gemini rephrase the prose, persists everything on the
+// interview row, and marks it COMPLETED. Idempotent.
+export async function generateReport(interviewId) {
+  return apiRequest(`/interviews/${interviewId}/report`, { method: "POST", auth: true });
+}
+
+// Read a previously generated report (e.g. re-opening from History).
+export async function getReport(interviewId) {
+  return apiRequest(`/interviews/${interviewId}/report`, { auth: true });
 }
 
 // ---------------------------------------------------------------------------

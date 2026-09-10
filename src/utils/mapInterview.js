@@ -25,5 +25,11 @@ export function mapInterviewRecord(record) {
     // /complete — null just means "not completed yet", not "zero".
     score: typeof record.score === "number" ? record.score : null,
     feedbackSummary: record.feedbackSummary || null,
+    // Company-targeting fields — null for interviews scheduled via the
+    // "Custom Settings" path or before that feature existed.
+    company: record.targetCompany || null,
+    position: record.targetPosition || null,
+    salaryMin: typeof record.salaryMin === "number" ? record.salaryMin : null,
+    salaryMax: typeof record.salaryMax === "number" ? record.salaryMax : null,
   };
 }

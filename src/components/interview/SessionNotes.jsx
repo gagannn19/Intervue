@@ -7,6 +7,9 @@ export function SessionNotes({ config, answeredCount }) {
       <ul className="text-[11px] text-white/40 space-y-1.5 leading-relaxed">
         <li>· {config.type} · {config.difficulty} · {config.duration} min</li>
         <li>· {answeredCount} answers given so far</li>
+        {config.company && (
+          <li>· Target: {config.company}{config.position ? ` · ${config.position}` : ""}</li>
+        )}
         {config.role && <li>· Target role: {config.role}</li>}
       </ul>
     </Card>

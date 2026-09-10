@@ -4,6 +4,11 @@ export function FeedbackScorecard({ categories }) {
   return (
     <Card className="p-5 mb-6">
       <h3 className="text-sm font-semibold text-[var(--ink)] mb-4">Scorecard by category</h3>
+      {categories.length === 0 && (
+        <p className="text-[13px] text-[var(--ink)]/50">
+          Not enough activity in this round to score any category.
+        </p>
+      )}
       <div className="space-y-3">
         {categories.map((c) => (
           <div key={c.label} className="flex items-center gap-3">

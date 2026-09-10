@@ -10,7 +10,10 @@ export function UpcomingInterview({ upcoming, onSchedule, onJoin }) {
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-xl bg-[#6D5EF8]/10 flex items-center justify-center text-[#4C3FE0]"><Clock size={18} /></div>
           <div>
-            <p className="font-semibold text-sm text-[var(--ink)]">{upcoming.type} · {upcoming.difficulty}</p>
+            <p className="font-semibold text-sm text-[var(--ink)]">
+              {upcoming.type} · {upcoming.difficulty}
+              {upcoming.company && <span className="text-[var(--ink)]/50"> · {upcoming.company}{upcoming.position ? ` (${upcoming.position})` : ""}</span>}
+            </p>
             <p className="text-xs text-[var(--ink)]/50 mt-0.5">{upcoming.date} at {upcoming.time} · {upcoming.duration} min</p>
           </div>
         </div>

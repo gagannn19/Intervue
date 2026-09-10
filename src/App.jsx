@@ -5,7 +5,6 @@ import { useAuth } from "./context/AuthContext";
 import { useInterviews } from "./hooks/useInterviews";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import * as interviewService from "./services/interviewService";
-import { generateFeedback } from "./services/aiService";
 import { mapInterviewRecord } from "./utils/mapInterview";
 
 import { AuthLoadingScreen } from "./components/auth/AuthLoadingScreen";
@@ -14,7 +13,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { SchedulePage } from "./pages/SchedulePage";
+import { ScheduleWizardPage } from "./pages/ScheduleWizardPage";
 import { InterviewPage } from "./pages/InterviewPage";
 import { FeedbackPage } from "./pages/FeedbackPage";
 import { HistoryPage } from "./pages/HistoryPage";
@@ -66,18 +65,52 @@ export default function App() {
     }
   };
 
-  // "End Interview": compute the local mock feedback (unchanged — still
-  // the rich, transcript-based heuristic), persist just the score/summary
-  // to the backend so it survives refresh and shows up in History/Average
-  // Score, then show the same rich feedback screen as before.
+  // "End Interview" (Phase 3.5): the visible result is now the backend's
+  // authoritative final report, aggregated from the real per-question
+  // evaluations — no more mock generateFeedback().
+  //   1. wait (briefly) for the final in-progress question's evaluation
+  //   2. ask the backend to build + persist the final report
+  //   3. if that fails hard, still complete the interview so it isn't
+  //      stuck IN_PROGRESS
   const handleEndInterview = async (session) => {
-    const feedback = generateFeedback(session);
-    await interviewService.completeInterview(session.config.id, {
-      score: feedback.overall,
-      feedbackSummary: feedback.summary,
-    });
+    // Give the last question's evaluation a moment to land — but never
+    // block the candidate on a slow Gemini call.
+    try {
+      await Promise.race([
+        session.finalizeEvaluation?.() ?? Promise.resolve(),
+        new Promise((resolve) => setTimeout(resolve, 8000)),
+      ]);
+    } catch {
+      /* evaluation is best-effort — ignore and continue */
+    }
+
+    let report = null;
+    try {
+      report = await interviewService.generateReport(session.config.id);
+    } catch {
+      try {
+        await interviewService.completeInterview(session.config.id);
+      } catch {
+        /* last resort — the interview stays IN_PROGRESS, user can retry from history later */
+      }
+    }
+
     await interviews.refresh();
-    nav.endInterview(session);
+    nav.endInterview({ config: session.config, report });
+  };
+
+  // Re-open a finished interview's report from the History list.
+  const handleOpenReport = async (interview) => {
+    let report = null;
+    try {
+      report = await interviewService.getReport(interview.id);
+    } catch {
+      /* fall through — FeedbackPage handles a null report */
+    }
+    nav.endInterview({
+      config: { type: interview.type, difficulty: interview.difficulty, duration: interview.duration },
+      report,
+    });
   };
 
   const handleLogout = () => {
@@ -115,13 +148,13 @@ export default function App() {
       onToggleDark={toggleDark}
     >
       {nav.screen === "schedule" && (
-        <SchedulePage onBack={nav.backFromSchedule} onConfirm={handleConfirmSchedule} dark={dark} />
+        <ScheduleWizardPage onBack={nav.backFromSchedule} onConfirm={handleConfirmSchedule} dark={dark} />
       )}
       {nav.screen === "feedback" && nav.lastSession && (
         <FeedbackPage session={nav.lastSession} onBackToDashboard={() => nav.setScreen("dashboard")} onHistory={() => nav.setScreen("history")} />
       )}
       {nav.screen === "history" && (
-        <HistoryPage history={interviews.history} />
+        <HistoryPage history={interviews.history} onOpen={handleOpenReport} />
       )}
       {nav.screen === "dashboard" && auth.user && (
         <DashboardPage

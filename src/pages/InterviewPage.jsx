@@ -38,7 +38,14 @@ export function InterviewPage({ config, onEnd }) {
 
   return (
     <div className="min-h-screen bg-[#0D0D1F] text-white flex flex-col">
-      <InterviewHeader questionTitle={engine.question.title} difficulty={config.difficulty} timeLabel={engine.timeLabel} />
+      <InterviewHeader
+        questionTitle={engine.question.title}
+        difficulty={config.difficulty}
+        timeLabel={engine.timeLabel}
+        company={config.company}
+        position={config.position}
+        type={config.type}
+      />
 
       <div className="flex-1 grid lg:grid-cols-[1fr_400px] min-h-0">
         <div className="flex flex-col min-h-0 border-r border-white/10">
@@ -65,7 +72,15 @@ export function InterviewPage({ config, onEnd }) {
           )}
 
           {engine.waitingForUser && (
-            <AnswerInput value={engine.userInput} onChange={engine.setUserInput} onSubmit={engine.submitAnswer} micOn={engine.micOn} />
+            <AnswerInput
+              value={engine.userInput}
+              onChange={engine.setUserInput}
+              onSubmit={engine.submitAnswer}
+              micOn={engine.micOn}
+              disabled={engine.turnLoading}
+              error={engine.turnError}
+              onRetry={engine.retryTurn}
+            />
           )}
         </div>
 

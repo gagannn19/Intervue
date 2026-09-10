@@ -1,5 +1,4 @@
-const DIFFICULTIES = ["Easy", "Medium", "Hard"];
-const DURATIONS = [15, 30, 45, 60];
+import { DIFFICULTIES, DURATIONS } from "../../constants/schedule";
 
 // Difficulty and duration are two small, closely-related pickers on the same
 // form step — grouped in one file rather than split into two near-empty ones.

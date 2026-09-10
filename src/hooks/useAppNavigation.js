@@ -37,16 +37,21 @@ export function useAppNavigation(user, authLoading) {
   const backFromSchedule = () => setScreen("dashboard");
 
   // Used both for a fresh "Join now" (after the backend /start call) and
-  // for resuming an already-in_progress interview after a page refresh —
-  // both cases just need id/difficulty/duration/role/startedAt.
+  // for resuming an already-in_progress interview after a page refresh.
+  // `interview` is always a mapInterviewRecord() result, so it carries the
+  // company/position targeting fields (null for custom / older interviews).
+  // This config is display context only — the AI's targeting context is
+  // rebuilt server-side from the DB row when questions are generated.
   const joinInterview = (interview) => {
     if (!interview) return;
     setActiveConfig({
       id: interview.id,
-      type: "DSA",
+      type: interview.type || "DSA",
       difficulty: interview.difficulty,
       duration: interview.duration,
       role: interview.role,
+      company: interview.company || null,
+      position: interview.position || null,
       startedAt: interview.startedAt,
     });
     setScreen("room");

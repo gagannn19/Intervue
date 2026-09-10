@@ -18,10 +18,18 @@ import { QUESTION_BANK } from "../constants/questions";
 // follow-ups remain as a fallback only — this function is never called
 // without aiQuestions in normal operation once the interview room has
 // them (see useInterviewEngine).
-export function buildScript(difficulty, aiQuestions) {
+export function buildScript(difficulty, aiQuestions, meta = {}) {
   const q = QUESTION_BANK[difficulty.toLowerCase()];
+  // For a company-targeted interview, acknowledge the target in the
+  // opening line so the room's interviewer visibly knows the context.
+  // Empty for custom / older interviews — the rest of the script is
+  // identical either way.
+  const { company, position } = meta;
+  const targetLine = company
+    ? ` This one's set up as prep for ${company}${position ? ` (${position})` : ""}, so I'll pitch it at that bar.`
+    : "";
   const lines = [
-    { ai: `Hi, welcome to your ${difficulty.toLowerCase()} DSA interview. We'll work through one problem together, and I'll be asking follow-ups as we go. Ready to start?` },
+    { ai: `Hi, welcome to your ${difficulty.toLowerCase()} DSA interview.${targetLine} We'll work through one problem together, and I'll be asking follow-ups as we go. Ready to start?` },
     { waitUser: true },
     { ai: `Great. Here's the problem: "${q.title}." ${q.statement}` },
     { waitUser: true },
@@ -55,10 +63,13 @@ export function stopSpeaking() {
   window.speechSynthesis?.cancel();
 }
 
-// Generates a feedback scorecard from the transcript using simple,
-// explainable heuristics (word count, whether complexity/edge cases were
-// mentioned, how many follow-ups were actually answered). Deterministic and
-// easy to reason about — swap for a real LLM evaluation call later.
+// DEPRECATED (Phase 3.5). The visible interview result now comes from the
+// backend's authoritative final report (GET/POST /interviews/:id/report),
+// which aggregates the real Phase 3.3 per-question evaluations. This
+// word-count/regex heuristic fabricated non-zero scores even when the
+// candidate never answered — it is no longer called anywhere. Kept only
+// so the module boundary and history are intact; delete once nothing in
+// the tree references it.
 export function generateFeedback(session) {
   const userMsgs = session.messages.filter((m) => m.from === "user");
   const totalWords = userMsgs.reduce((a, m) => a + m.text.split(/\s+/).length, 0);
