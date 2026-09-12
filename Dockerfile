@@ -11,11 +11,25 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Build-time public configuration. This is NOT a secret — it is the public
-# base URL of the backend API and Vite bakes it into the static bundle.
-# Passed in by Cloud Build from the _VITE_API_URL substitution.
+# Build-time public configuration — Vite bakes all of these into the static
+# bundle. Firebase web config ships in the client bundle by design (see
+# .env.example); none of this is secret, it's just sourced from Secret
+# Manager (cuecast-intervue-frontend) at build time for convenience of
+# having one place to manage per-environment values. See cloudbuild.yaml.
 ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
+    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
+    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
+    VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET \
+    VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID \
+    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 
 COPY . .
 RUN npm run build
