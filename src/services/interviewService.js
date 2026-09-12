@@ -2,8 +2,8 @@ import { apiRequest } from "../lib/apiClient";
 
 // ---------------------------------------------------------------------------
 // Real backend calls: scheduling, reading, and the start/complete lifecycle.
-// The actual interview room conversation still runs on local mock AI (see
-// aiService.js) — only the final score/summary gets persisted here.
+// startInterview() also creates/reuses the Daily voice room and returns
+// this candidate's join token — see useInterviewEngine.js.
 // ---------------------------------------------------------------------------
 
 // `company`, `position`, `salaryMin`, `salaryMax` and `type` are optional —
@@ -55,7 +55,10 @@ export async function getHistoryInterviews() {
 
 // Marks the interview in_progress on the backend and records a real
 // startedAt — this is the source of truth the timer resumes from if the
-// page gets refreshed mid-interview.
+// page gets refreshed mid-interview. Also creates (or reuses, on a
+// refresh) the Daily voice room and spawns the pipecat bot, returning
+// { ...interview, dailyRoomUrl, dailyToken } — dailyToken is this
+// candidate's own join token, minted fresh on every call.
 export async function startInterview(interviewId) {
   return apiRequest(`/interviews/${interviewId}/start`, { method: "POST", auth: true });
 }

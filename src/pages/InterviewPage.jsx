@@ -1,9 +1,8 @@
 import { useInterviewEngine } from "../hooks/useInterviewEngine";
 import { InterviewHeader } from "../components/interview/InterviewHeader";
 import { AIInterviewerPanel } from "../components/interview/AIInterviewerPanel";
-import { Transcript } from "../components/interview/Transcript";
+import { CallPanel } from "../components/interview/CallPanel";
 import { CodingPanel } from "../components/interview/CodingPanel";
-import { AnswerInput } from "../components/interview/AnswerInput";
 import { UserVideoPanel } from "../components/interview/UserVideoPanel";
 import { InterviewControls } from "../components/interview/InterviewControls";
 import { SessionNotes } from "../components/interview/SessionNotes";
@@ -51,13 +50,12 @@ export function InterviewPage({ config, onEnd }) {
         <div className="flex flex-col min-h-0 border-r border-white/10">
           <AIInterviewerPanel
             speaking={engine.aiSpeaking}
-            thinking={engine.aiThinking}
             tab={engine.tab}
             onTabChange={engine.setTab}
           />
 
-          {engine.tab === "transcript" ? (
-            <Transcript messages={engine.messages} aiThinking={engine.aiThinking} endRef={engine.transcriptEndRef} />
+          {engine.tab === "call" ? (
+            <CallPanel status={engine.callStatus} error={engine.callError} aiSpeaking={engine.aiSpeaking} />
           ) : (
             <CodingPanel
               statement={engine.question.statement}
@@ -68,18 +66,6 @@ export function InterviewPage({ config, onEnd }) {
               onRun={engine.runCode}
               running={engine.running}
               output={engine.output}
-            />
-          )}
-
-          {engine.waitingForUser && (
-            <AnswerInput
-              value={engine.userInput}
-              onChange={engine.setUserInput}
-              onSubmit={engine.submitAnswer}
-              micOn={engine.micOn}
-              disabled={engine.turnLoading}
-              error={engine.turnError}
-              onRetry={engine.retryTurn}
             />
           )}
         </div>
@@ -93,7 +79,7 @@ export function InterviewPage({ config, onEnd }) {
             onToggleCam={() => engine.setCamOn((v) => !v)}
             onEnd={engine.finishInterview}
           />
-          <SessionNotes config={config} answeredCount={engine.answeredCount} />
+          <SessionNotes config={config} callStatus={engine.callStatus} />
         </div>
       </div>
     </div>

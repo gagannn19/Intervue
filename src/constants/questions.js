@@ -1,5 +1,5 @@
-// The DSA question bank the mock AI interviewer scripts itself from.
-// Keyed by difficulty so aiService.buildScript() can look one up directly.
+// The DSA question bank. Keyed by difficulty — useInterviewEngine looks up
+// the main problem for the interview's difficulty directly from here.
 export const QUESTION_BANK = {
   easy: {
     title: "Two Sum",
