@@ -41,6 +41,9 @@ export function useInterviewEngine(config, onEnd) {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [mediaError, setMediaError] = useState(null);
+  // True if the browser blocked autoplay of the bot's voice (rare, but
+  // possible depending on browser/history) — see remoteAudioRef below.
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   const initialSeconds = config.startedAt
     ? Math.max(0, config.duration * 60 - Math.floor((Date.now() - new Date(config.startedAt).getTime()) / 1000))
@@ -56,6 +59,11 @@ export function useInterviewEngine(config, onEnd) {
 
   const videoRef = useRef(null);
   const localVideoTrackRef = useRef(null);
+  // Daily's headless call object (no iframe UI) does NOT auto-create or
+  // play an <audio> element for remote participants — unlike its iframe
+  // mode, it only fires track-started and leaves playback entirely to us.
+  // This element is what actually makes the bot's voice audible.
+  const remoteAudioRef = useRef(null);
 
   // --- countdown timer ---
   useEffect(() => {
@@ -101,6 +109,20 @@ export function useInterviewEngine(config, onEnd) {
             if (ev.participant?.local && ev.type === "video") {
               localVideoTrackRef.current = ev.track;
               if (videoRef.current) videoRef.current.srcObject = new MediaStream([ev.track]);
+              return;
+            }
+            // The bot's voice. Without this, pipecat's TTS audio arrives
+            // over WebRTC but has nowhere to play — dead silence with no
+            // error anywhere, since nothing actually failed.
+            if (!ev.participant?.local && ev.type === "audio") {
+              const audioEl = remoteAudioRef.current ?? document.createElement("audio");
+              audioEl.autoplay = true;
+              audioEl.srcObject = new MediaStream([ev.track]);
+              if (!remoteAudioRef.current) {
+                remoteAudioRef.current = audioEl;
+                document.body.appendChild(audioEl);
+              }
+              audioEl.play().catch(() => setAudioBlocked(true));
             }
           })
           .on("active-speaker-change", (ev) => {
@@ -136,10 +158,21 @@ export function useInterviewEngine(config, onEnd) {
   useEffect(() => {
     return () => {
       const call = callRef.current;
-      if (!call) return;
-      call.leave().catch(() => {});
-      call.destroy();
+      if (call) {
+        call.leave().catch(() => {});
+        call.destroy();
+      }
+      remoteAudioRef.current?.remove();
     };
+  }, []);
+
+  // Fallback if the browser blocked autoplay of the bot's voice: a real
+  // click always satisfies autoplay policy, so retry play() from here.
+  const unblockAudio = useCallback(() => {
+    remoteAudioRef.current
+      ?.play()
+      .then(() => setAudioBlocked(false))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -203,6 +236,8 @@ export function useInterviewEngine(config, onEnd) {
     callStatus,
     callError,
     aiSpeaking,
+    audioBlocked,
+    unblockAudio,
     micOn,
     setMicOn,
     camOn,

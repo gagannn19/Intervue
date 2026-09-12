@@ -1,4 +1,5 @@
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, VolumeX } from "lucide-react";
+import { GradientButton } from "../ui/GradientButton";
 
 const STATUS_COPY = {
   connecting: "Setting up your interview…",
@@ -13,7 +14,7 @@ const STATUS_COPY = {
 // first pass — see useInterviewEngine's file comment for why — so there's
 // nothing to render turn by turn. This just reflects call state: still
 // connecting, live, or something went wrong.
-export function CallPanel({ status, error, aiSpeaking }) {
+export function CallPanel({ status, error, aiSpeaking, audioBlocked, onUnblockAudio }) {
   if (status === "error") {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
@@ -31,6 +32,12 @@ export function CallPanel({ status, error, aiSpeaking }) {
         <>
           <Loader2 size={24} className="animate-spin text-white/40" />
           <p className="text-sm text-white/50">{copy}</p>
+        </>
+      ) : audioBlocked ? (
+        <>
+          <VolumeX size={28} className="text-[#FF8FA3]" />
+          <p className="text-sm text-white/70">Your browser blocked the interviewer's audio.</p>
+          <GradientButton onClick={onUnblockAudio}>Tap to enable sound</GradientButton>
         </>
       ) : (
         <p className="text-sm text-white/40">

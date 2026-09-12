@@ -55,7 +55,13 @@ export function InterviewPage({ config, onEnd }) {
           />
 
           {engine.tab === "call" ? (
-            <CallPanel status={engine.callStatus} error={engine.callError} aiSpeaking={engine.aiSpeaking} />
+            <CallPanel
+              status={engine.callStatus}
+              error={engine.callError}
+              aiSpeaking={engine.aiSpeaking}
+              audioBlocked={engine.audioBlocked}
+              onUnblockAudio={engine.unblockAudio}
+            />
           ) : (
             <CodingPanel
               statement={engine.question.statement}
