@@ -68,4 +68,62 @@ ElevenLabs, via the pipecat bot, now).
 
 ## Environment variables
 
-`VITE_API_URL` — intervue-backend's base URL (default `http://localhost:4000/api`). No Daily or cuecast config lives here — the backend hands this app a room URL + token per interview; it never talks to Daily's REST API or to cuecast-pipecat-langchain directly.
+All `VITE_*` — see `.env.example`. `VITE_API_URL` is intervue-backend's
+base URL (default `http://localhost:4000/api`). The rest
+(`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
+`VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`,
+`VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`) are Firebase
+web config for `src/lib/firebase.js` — these ship in the client bundle by
+design (Firebase's web SDK config is not a secret), they're just sourced
+from Secret Manager in production for convenience (see Deployment
+below). No Daily or cuecast config lives here — the backend hands this
+app a room URL + token per interview; it never talks to Daily's REST API
+or to cuecast-pipecat-langchain directly.
+
+## Deployment
+
+GCP project `cuecast-507920`, region `asia-south1`. Google Cloud Run via
+Cloud Build, triggered on push to `master`:
+
+```
+master push → Cloud Build trigger "cuecast-github-cicd-trigger"
+            → build (Dockerfile, via cloudbuild.yaml committed in this repo —
+              the trigger itself is marked "autodetect" but Cloud Build
+              prefers a committed cloudbuild.yaml over Buildpacks when one exists)
+            → push image to Artifact Registry
+              (asia-south1-docker.pkg.dev/cuecast-507920/intervue-frontend)
+            → gcloud run deploy intervue-frontend
+              (--region=asia-south1 --allow-unauthenticated --port=8080
+               --cpu=1 --memory=512Mi --min-instances=0 --max-instances=3
+               --concurrency=80)
+```
+
+`dev` is the development branch; `master` is production and is what the
+trigger watches (`^master$`). Both branches have GitHub branch protection
+(PR + signed commits required); direct pushes need an admin bypass.
+
+The trigger is a classic (1st-gen) Cloud Build GitHub App connection —
+same GitHub App installation `cuecast-pipecat-langchain`'s trigger uses.
+Runs as service account `cuecast-github-cicd@cuecast-507920.iam.gserviceaccount.com`
+(shared with that repo's trigger too).
+
+### Build-time config (not runtime — this is a static bundle)
+
+This app is a Vite static build served by nginx (see Dockerfile) — there
+is no running process to inject runtime env vars into, everything must be
+baked into the JS bundle *at build time*. All the `VITE_*` values (see
+above) live in one Secret Manager secret, `cuecast-intervue-frontend` —
+one `.env`-formatted blob, same pattern as `cuecast-pipecat-langchain`'s
+secret. `cloudbuild.yaml`'s build step pulls it via `availableSecrets` /
+`secretEnv`, `eval`s it into shell vars (`entrypoint: sh`, not `bash` —
+`gcr.io/cloud-builders/docker` is Alpine-based and has no bash), then
+passes each one as a separate `docker build --build-arg`; the Dockerfile
+declares a matching `ARG`/`ENV` pair per var before `COPY . .` /
+`npm run build`. The `--build-arg`s only exist in the `build` stage of the
+multi-stage Dockerfile, not the final `nginx` runtime stage that actually
+gets pushed.
+
+To update a value: add a new version to the `cuecast-intervue-frontend`
+secret (Secret Manager versions are immutable, no partial edit) — takes
+effect on the *next* build, since it's baked in at build time, not
+picked up by already-running containers.
