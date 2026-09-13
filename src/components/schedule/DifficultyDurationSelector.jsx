@@ -13,7 +13,7 @@ export function DifficultyDurationSelector({ difficulty, onDifficultyChange, dur
               key={d}
               onClick={() => onDifficultyChange(d)}
               className={`py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
-                difficulty === d ? "border-[#6D5EF8] bg-[#6D5EF8]/5 text-[#4C3FE0]" : "border-[var(--ink)]/10 text-[var(--ink)]/60"
+                difficulty === d ? "border-[#FF7A00] bg-[#FF7A00]/5 text-[#CC5500]" : "border-[var(--ink)]/10 text-[var(--ink)]/60"
               }`}
             >
               {d}
@@ -30,7 +30,7 @@ export function DifficultyDurationSelector({ difficulty, onDifficultyChange, dur
               key={d}
               onClick={() => onDurationChange(d)}
               className={`py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
-                duration === d ? "border-[#6D5EF8] bg-[#6D5EF8]/5 text-[#4C3FE0]" : "border-[var(--ink)]/10 text-[var(--ink)]/60"
+                duration === d ? "border-[#FF7A00] bg-[#FF7A00]/5 text-[#CC5500]" : "border-[var(--ink)]/10 text-[var(--ink)]/60"
               }`}
             >
               {d}m

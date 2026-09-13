@@ -14,7 +14,7 @@ export function Features() {
       <Card className="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[var(--ink)]/8 p-6 gap-6 sm:gap-0">
         {FEATURES.map((f, i) => (
           <div key={f.title} className={`px-0 sm:px-6 ${i > 0 ? "pt-6 sm:pt-0" : ""}`}>
-            <div className="w-9 h-9 rounded-lg bg-[#6D5EF8]/10 flex items-center justify-center text-[#4C3FE0] mb-3">
+            <div className="w-9 h-9 rounded-lg bg-[#FF7A00]/10 flex items-center justify-center text-[#CC5500] mb-3">
               <f.icon size={17} />
             </div>
             <h3 className="font-semibold text-[15px] text-[var(--ink)]">{f.title}</h3>

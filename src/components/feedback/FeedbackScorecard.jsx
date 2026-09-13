@@ -14,7 +14,7 @@ export function FeedbackScorecard({ categories }) {
           <div key={c.label} className="flex items-center gap-3">
             <span className="text-xs text-[var(--ink)]/60 w-44 shrink-0">{c.label}</span>
             <div className="flex-1 h-2 rounded-full bg-[var(--ink)]/8 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#6D5EF8] to-[#4C3FE0]" style={{ width: `${c.score}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-[#FF7A00] to-[#CC5500]" style={{ width: `${c.score}%` }} />
             </div>
             <span className="text-xs font-semibold text-[var(--ink)] w-8 text-right">{c.score}</span>
           </div>

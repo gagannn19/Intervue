@@ -68,10 +68,10 @@ export function InterviewTypeSelector({ value, onChange, multiple = false, types
               onClick={() => handleClick(t)}
               aria-pressed={isSelected(t.id)}
               className={`p-3 rounded-xl border text-left transition-colors ${
-                isSelected(t.id) ? "border-[#6D5EF8] bg-[#6D5EF8]/5" : "border-[var(--ink)]/10"
+                isSelected(t.id) ? "border-[#FF7A00] bg-[#FF7A00]/5" : "border-[var(--ink)]/10"
               } ${!t.live && "opacity-50"}`}
             >
-              {t.icon && <t.icon size={15} className="text-[#4C3FE0]" />}
+              {t.icon && <t.icon size={15} className="text-[#CC5500]" />}
               <p className="text-xs font-semibold mt-1.5 text-[var(--ink)]">{t.label}</p>
             </button>
           ))}
