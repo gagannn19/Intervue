@@ -36,7 +36,7 @@ export function PositionStep({ companySlug, selectedId, onSelect }) {
               aria-pressed={selectedId === p.id}
               className={`p-3 rounded-xl border text-left text-sm font-semibold transition-colors ${
                 selectedId === p.id
-                  ? "border-[#6D5EF8] bg-[#6D5EF8]/5 text-[#4C3FE0]"
+                  ? "border-[#FF7A00] bg-[#FF7A00]/5 text-[#CC5500]"
                   : "border-[var(--ink)]/10 text-[var(--ink)]/70 hover:border-[var(--ink)]/25"
               }`}
             >

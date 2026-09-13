@@ -8,7 +8,7 @@ export function RecentInterviews({ history, onViewAll }) {
     <>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-[var(--ink)]">Recent interviews</h2>
-        <button onClick={onViewAll} className="text-xs font-semibold text-[#4C3FE0]">View all</button>
+        <button onClick={onViewAll} className="text-xs font-semibold text-[#CC5500]">View all</button>
       </div>
       <Card className="divide-y divide-[var(--ink)]/6">
         {history.length === 0 && (

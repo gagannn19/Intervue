@@ -1,5 +1,8 @@
+// "violet" is a historical name (kept so no call site needs to change) —
+// it now renders in the brand accent (orange), same as everything else
+// touched by the redesign.
 const TONES = {
-  violet: "bg-[#6D5EF8]/12 text-[#8577FF]",
+  violet: "bg-[var(--accent-soft)] text-[var(--accent-ink)]",
   green: "bg-[#22C97A]/14 text-[#1FAE6C]",
   amber: "bg-[#F5A623]/14 text-[#D98D0E]",
   red: "bg-[#FF5C7A]/14 text-[#E24468]",

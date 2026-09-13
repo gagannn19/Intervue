@@ -24,7 +24,7 @@ export function DifficultyStep({ companySlug, positionSlug, companyName }) {
       />
 
       <div className="rounded-xl border border-[var(--ink)]/10 bg-[var(--ink)]/[0.02] p-4 flex items-center gap-3">
-        <Sparkles size={16} className="text-[#4C3FE0] shrink-0" />
+        <Sparkles size={16} className="text-[#CC5500] shrink-0" />
         <span className="text-sm text-[var(--ink)]/70">Interview difficulty</span>
         <span className="ml-auto">
           {loading ? (

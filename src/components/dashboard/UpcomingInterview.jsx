@@ -6,9 +6,9 @@ import { GhostButton } from "../ui/GhostButton";
 export function UpcomingInterview({ upcoming, onSchedule, onJoin }) {
   if (upcoming) {
     return (
-      <Card className="p-5 mb-6 flex items-center justify-between flex-wrap gap-4 border-[#6D5EF8]/30">
+      <Card className="p-5 mb-6 flex items-center justify-between flex-wrap gap-4 border-[#FF7A00]/30">
         <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#6D5EF8]/10 flex items-center justify-center text-[#4C3FE0]"><Clock size={18} /></div>
+          <div className="w-11 h-11 rounded-xl bg-[#FF7A00]/10 flex items-center justify-center text-[#CC5500]"><Clock size={18} /></div>
           <div>
             <p className="font-semibold text-sm text-[var(--ink)]">
               {upcoming.type} · {upcoming.difficulty}

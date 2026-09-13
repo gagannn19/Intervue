@@ -10,7 +10,7 @@ export function InterviewHeader({ questionTitle, difficulty, timeLabel, company,
   return (
     <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#6D5EF8] to-[#4C3FE0] flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#FF7A00] to-[#CC5500] flex items-center justify-center shrink-0">
           <Sparkles size={13} />
         </div>
         <span className="text-sm font-semibold truncate" style={disp}>{questionTitle}</span>

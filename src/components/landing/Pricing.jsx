@@ -16,7 +16,7 @@ export function Pricing() {
       <h2 className="text-3xl font-bold text-center text-[var(--ink)]" style={disp}>Simple pricing</h2>
       <div className="mt-10 grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
         {PLANS.map((p) => (
-          <Card key={p.name} className={`p-6 ${p.highlight ? "border-[#6D5EF8]/40 ring-2 ring-[#6D5EF8]/20" : ""}`}>
+          <Card key={p.name} className={`p-6 ${p.highlight ? "border-[#FF7A00]/40 ring-2 ring-[#FF7A00]/20" : ""}`}>
             {p.highlight && <Badge>Most popular</Badge>}
             <h3 className="font-semibold text-[15px] mt-3 text-[var(--ink)]">{p.name}</h3>
             <p className="text-3xl font-bold mt-2 text-[var(--ink)]" style={disp}>

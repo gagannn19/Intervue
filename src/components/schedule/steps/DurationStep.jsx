@@ -16,7 +16,7 @@ export function DurationStep({ value, onChange }) {
             aria-pressed={value === d}
             className={`py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
               value === d
-                ? "border-[#6D5EF8] bg-[#6D5EF8]/5 text-[#4C3FE0]"
+                ? "border-[#FF7A00] bg-[#FF7A00]/5 text-[#CC5500]"
                 : "border-[var(--ink)]/10 text-[var(--ink)]/60 hover:border-[var(--ink)]/25"
             }`}
           >

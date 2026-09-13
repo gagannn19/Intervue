@@ -63,7 +63,7 @@ export function MoreCompaniesPopover({ companies, selectedId, onSelect, onClose 
           onKeyDown={onKeyDown}
           placeholder="Search companies…"
           aria-label="Search companies"
-          className="w-full rounded-lg border border-[var(--ink)]/12 bg-[var(--bg)] text-[var(--ink)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[#6D5EF8]"
+          className="w-full rounded-lg border border-[var(--ink)]/12 bg-[var(--bg)] text-[var(--ink)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[#FF7A00]"
         />
       </div>
 
@@ -91,14 +91,14 @@ export function MoreCompaniesPopover({ companies, selectedId, onSelect, onClose 
                   onClick={() => onSelect(c.id)}
                   className={`flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
                     isSelected
-                      ? "border-[#6D5EF8] bg-[#6D5EF8]/5"
+                      ? "border-[#FF7A00] bg-[#FF7A00]/5"
                       : isActive
                         ? "border-[var(--ink)]/25 bg-[var(--ink)]/[0.04]"
                         : "border-transparent hover:border-[var(--ink)]/15"
                   }`}
                 >
                   {isSelected ? (
-                    <Check size={14} className="shrink-0 text-[#4C3FE0]" />
+                    <Check size={14} className="shrink-0 text-[#CC5500]" />
                   ) : (
                     <Building2 size={14} className="shrink-0 text-[var(--ink)]/45" />
                   )}

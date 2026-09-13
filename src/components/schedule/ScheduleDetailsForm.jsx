@@ -1,4 +1,4 @@
-const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#6D5EF8]";
+const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#FF7A00]";
 
 // Date, time, and the two optional fields (target role, custom instructions).
 export function ScheduleDetailsForm({ dark, date, onDateChange, time, onTimeChange, role, onRoleChange, instructions, onInstructionsChange }) {

@@ -13,7 +13,7 @@ export function Categories() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {INTERVIEW_TYPES.map((t) => (
           <Card key={t.id} className={`p-5 ${!t.live && "opacity-60"}`}>
-            <t.icon size={18} className="text-[#4C3FE0]" />
+            <t.icon size={18} className="text-[#CC5500]" />
             <h3 className="font-semibold text-sm mt-3 text-[var(--ink)]">{t.label}</h3>
             <p className="text-xs text-[var(--ink)]/50 mt-1">{t.desc}</p>
             <div className="mt-3">
