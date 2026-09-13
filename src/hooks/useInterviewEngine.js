@@ -139,6 +139,21 @@ export function useInterviewEngine(config, onEnd) {
         setCallStatus("joining");
         await call.join({ url: session.dailyRoomUrl, token: session.dailyToken });
         if (!active) return;
+        // Explicitly (re-)apply mic/cam state to the real call object now
+        // that it actually exists. The separate `[micOn]`/`[camOn]` effects
+        // below exist for when the user later toggles a button — but since
+        // callRef.current is only assigned here, asynchronously, those
+        // effects' *first* run (on mount, with micOn/camOn still at their
+        // initial value) fires before this async function has gotten this
+        // far and silently no-ops on a still-null callRef.current. If the
+        // user never touches the mic button afterward, that dependency
+        // never changes again, so setLocalAudio(true) would otherwise never
+        // reach the real object at all — the candidate's mic stays
+        // unpublished (well-formed but all-silent audio frames, no error
+        // anywhere) despite the UI showing it as on. video has a fallback
+        // for this (track-started re-attaches it regardless); audio didn't.
+        call.setLocalAudio(micOn);
+        call.setLocalVideo(camOn);
         setCallStatus("live");
       } catch (err) {
         if (!active) return;
