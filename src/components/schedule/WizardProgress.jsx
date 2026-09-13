@@ -9,7 +9,7 @@ export function WizardProgress({ steps, current }) {
           <div
             key={label}
             className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-              i <= current ? "bg-[#6D5EF8]" : "bg-[var(--ink)]/10"
+              i <= current ? "bg-[#FF7A00]" : "bg-[var(--ink)]/10"
             }`}
           />
         ))}

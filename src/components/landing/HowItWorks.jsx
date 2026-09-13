@@ -16,7 +16,7 @@ export function HowItWorks() {
       <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {STEPS.map((s) => (
           <Card key={s.n} className="p-5 relative">
-            <span className="text-[11px] font-bold text-[#6D5EF8]/60" style={mono}>{s.n}</span>
+            <span className="text-[11px] font-bold text-[#FF7A00]/60" style={mono}>{s.n}</span>
             <div className="w-9 h-9 mt-2 rounded-lg bg-[var(--ink)]/5 flex items-center justify-center text-[var(--ink)]/70">
               <s.icon size={16} />
             </div>

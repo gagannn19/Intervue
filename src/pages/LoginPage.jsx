@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Sparkles, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { GoogleButton } from "../components/auth/GoogleButton";
 import { disp, themeVars } from "../constants/theme";
 
-const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#6D5EF8]";
+const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#FF7A00]";
 
 export function LoginPage({ onLogin, onGoogle, onGoToSignup, onBack, dark, onToggleDark }) {
   const [email, setEmail] = useState("");
@@ -43,10 +43,8 @@ export function LoginPage({ onLogin, onGoogle, onGoToSignup, onBack, dark, onTog
     <div className="min-h-screen bg-[var(--bg)] flex flex-col transition-colors duration-300" style={{ ...themeVars(dark), fontFamily: "'Inter', sans-serif" }}>
       <header className="max-w-7xl w-full mx-auto flex items-center justify-between px-6 py-5">
         <button onClick={onBack} className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6D5EF8] to-[#4C3FE0] flex items-center justify-center">
-            <Sparkles size={17} className="text-white" />
-          </div>
-          <span className="font-bold text-xl text-[var(--ink)]" style={disp}>Intervue</span>
+          <img src="/brand/logo-mark.png" alt="" className="w-8 h-8" />
+          <span className="font-semibold text-2xl text-[var(--ink)]" style={disp}>Cuecast</span>
         </button>
         <ThemeToggle dark={dark} onToggle={onToggleDark} />
       </header>
@@ -82,8 +80,8 @@ export function LoginPage({ onLogin, onGoogle, onGoToSignup, onBack, dark, onTog
           {error && <p className="text-[13px] text-[#E24468] mt-4">{error}</p>}
 
           <p className="text-[13px] text-[var(--ink)]/55 mt-5 text-center">
-            New to Intervue?{" "}
-            <button onClick={onGoToSignup} className="font-semibold text-[#4C3FE0]">Create an account</button>
+            New to Cuecast?{" "}
+            <button onClick={onGoToSignup} className="font-semibold text-[#CC5500]">Create an account</button>
           </p>
         </Card>
       </div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, History, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, History, LogOut } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { disp, themeVars } from "../../constants/theme";
 
@@ -20,10 +20,8 @@ export function AppShell({ active, onNav, onLogout, dark, onToggleDark, children
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-[var(--ink)]/8 bg-[var(--surface)] p-5 transition-colors duration-300">
         <div className="flex items-center justify-between px-1 mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6D5EF8] to-[#4C3FE0] flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
-            </div>
-            <span className="font-bold text-[17px] text-[var(--ink)]" style={disp}>Intervue</span>
+            <img src="/brand/logo-mark.png" alt="" className="w-7 h-7" />
+            <span className="font-semibold text-xl text-[var(--ink)]" style={disp}>Cuecast</span>
           </div>
           <ThemeToggle dark={dark} onToggle={onToggleDark} size="sm" />
         </div>
@@ -34,7 +32,7 @@ export function AppShell({ active, onNav, onLogout, dark, onToggleDark, children
               key={n.id}
               onClick={() => onNav(n.id)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                active === n.id ? "bg-[#6D5EF8]/12 text-[#8577FF]" : "text-[var(--ink)]/60 hover:bg-[var(--ink)]/5"
+                active === n.id ? "bg-[#FF7A00]/12 text-[#FFA94D]" : "text-[var(--ink)]/60 hover:bg-[var(--ink)]/5"
               }`}
             >
               <n.icon size={17} /> {n.label}

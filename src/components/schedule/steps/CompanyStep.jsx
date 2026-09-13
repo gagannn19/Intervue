@@ -67,11 +67,11 @@ export function CompanyStep({ companies, loading, error, selectedId, onSelect, o
                 aria-pressed={selectedId === c.id}
                 className={`flex items-center gap-2 rounded-xl border p-3 text-left transition-colors ${
                   selectedId === c.id
-                    ? "border-[#6D5EF8] bg-[#6D5EF8]/5"
+                    ? "border-[#FF7A00] bg-[#FF7A00]/5"
                     : "border-[var(--ink)]/10 hover:border-[var(--ink)]/25"
                 }`}
               >
-                <Building2 size={15} className="shrink-0 text-[#4C3FE0]" />
+                <Building2 size={15} className="shrink-0 text-[#CC5500]" />
                 <span className="truncate text-xs font-semibold text-[var(--ink)]">{c.name}</span>
               </button>
             ))}
@@ -85,12 +85,12 @@ export function CompanyStep({ companies, loading, error, selectedId, onSelect, o
               aria-expanded={moreOpen}
               className={`flex w-full items-center gap-2 rounded-xl border p-3 text-left transition-colors ${
                 selectedViaMore
-                  ? "border-[#6D5EF8] bg-[#6D5EF8]/5"
+                  ? "border-[#FF7A00] bg-[#FF7A00]/5"
                   : "border-[var(--ink)]/10 hover:border-[var(--ink)]/25"
               }`}
             >
               {selectedViaMore ? (
-                <Check size={15} className="shrink-0 text-[#4C3FE0]" />
+                <Check size={15} className="shrink-0 text-[#CC5500]" />
               ) : (
                 <Building2 size={15} className="shrink-0 text-[var(--ink)]/50" />
               )}
@@ -119,7 +119,7 @@ export function CompanyStep({ companies, loading, error, selectedId, onSelect, o
 
       <button
         onClick={onCustom}
-        className="mt-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-[var(--ink)]/25 p-3 text-left transition-colors hover:border-[#6D5EF8]"
+        className="mt-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-[var(--ink)]/25 p-3 text-left transition-colors hover:border-[#FF7A00]"
       >
         <Settings2 size={15} className="shrink-0 text-[var(--ink)]/60" />
         <span className="text-xs font-semibold text-[var(--ink)]">Custom Settings</span>

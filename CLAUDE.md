@@ -14,6 +14,15 @@ React (Vite) + Tailwind frontend for Intervue, an AI mock-interview
 platform. Firebase Auth for login; all app data comes from `intervue-backend`'s
 REST API. One of three repos:
 
+**Naming note:** the repo, component names, and internal identifiers all
+stay "Intervue" — that's the codebase's identity, unrelated to what a user
+sees. The *displayed* brand (logo, page title, nav wordmark, footer) is
+**"Cuecast"** — see `src/constants/theme.js` (fonts/colors) and
+`public/brand/` (logo mark, hero illustration) for the design system
+behind it. Don't "fix" a `Cuecast` string back to `Intervue` on sight;
+check which one you're actually looking at (UI copy vs. code identifier)
+first.
+
 | Repo | Role |
 |---|---|
 | `intervue-backend` | REST API, DB, owns interview state, runs the voice orchestrator |

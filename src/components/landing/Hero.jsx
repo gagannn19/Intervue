@@ -1,9 +1,5 @@
-import { ChevronRight, Play, Sparkles, Star } from "lucide-react";
+import { ChevronRight, Star } from "lucide-react";
 import { GradientButton } from "../ui/GradientButton";
-import { GhostButton } from "../ui/GhostButton";
-import { Badge } from "../ui/Badge";
-import { Card } from "../ui/Card";
-import { PulseAvatar } from "../ui/PulseAvatar";
 import { useRotatingText } from "../../hooks/useRotatingText";
 import { HERO_VARIANTS } from "../../constants/heroContent";
 import { disp } from "../../constants/theme";
@@ -25,27 +21,31 @@ export function Hero({ onSchedule }) {
   return (
     <section className="max-w-7xl mx-auto px-6 pt-10 pb-20 grid lg:grid-cols-2 gap-14 items-center">
       <div>
-        <Badge><Sparkles size={12} /> AI-POWERED INTERVIEWS</Badge>
-
-        <h1 className="mt-6 text-[44px] sm:text-[54px] leading-[1.05] font-bold text-[var(--ink)]" style={disp}>
-          Practice. Prepare.
-          <span className="block bg-gradient-to-r from-[#6D5EF8] to-[#4C3FE0] bg-clip-text text-transparent">
-            Ace your next interview.
+        <h1 className="text-[46px] sm:text-[58px] leading-[1.08] font-semibold text-[var(--ink)]" style={disp}>
+          Your next interview
+          <br />
+          starts <span className="relative inline-block">
+            here.
+            <svg viewBox="0 0 120 14" className="absolute left-0 -bottom-1.5 w-full h-3.5 text-[var(--accent)]" preserveAspectRatio="none">
+              <path d="M2 9.5c22-6 74-9 116-4.5" stroke="currentColor" strokeWidth="6" strokeLinecap="round" fill="none" />
+            </svg>
           </span>
         </h1>
 
         <RotatingDescription />
 
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="mt-3 flex flex-wrap items-center gap-4">
           <GradientButton onClick={onSchedule} className="px-6 py-3 text-[15px]">
-            Schedule DSA Interview <ChevronRight size={16} />
+            Start Practicing <ChevronRight size={16} />
           </GradientButton>
-          <GhostButton className="px-6 py-3 text-[15px]"><Play size={15} /> Watch demo</GhostButton>
+          <a href="#how" className="text-sm font-semibold text-[var(--ink)]/70 hover:text-[var(--ink)] underline underline-offset-4 decoration-[var(--ink)]/25">
+            See how it works ↓
+          </a>
         </div>
 
         <div className="mt-9 flex items-center gap-3">
           <div className="flex -space-x-2">
-            {["#6D5EF8", "#4C3FE0", "#22C97A", "#F5A623"].map((c, i) => (
+            {["var(--accent)", "var(--accent-ink)", "#22C97A", "#F5A623"].map((c, i) => (
               <div key={i} className="w-8 h-8 rounded-full border-2 border-[var(--surface)]" style={{ background: c }} />
             ))}
           </div>
@@ -58,23 +58,16 @@ export function Hero({ onSchedule }) {
         </div>
       </div>
 
-      {/* Hero visual — same pulse-ring language as the real interview room.
-          Kept intentionally dark in both themes: it's a video-call preview. */}
-      <Card className="p-4 sm:p-5">
-        <div className="rounded-xl bg-[#12122B] aspect-[4/3] relative overflow-hidden flex flex-col items-center justify-center">
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 text-[11px] text-white/70 bg-white/10 rounded-full px-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22C97A]" /> Interviewer live
-          </div>
-          <PulseAvatar size={92} speaking label />
-          <p className="mt-5 text-white/50 text-[11px] tracking-wide font-medium">AI INTERVIEWER</p>
-          <div className="absolute bottom-4 left-4 right-4 bg-white/10 backdrop-blur rounded-xl px-4 py-3 text-white/90 text-[13px]">
-            "Before you write code — walk me through your approach first."
-          </div>
-          <div className="absolute top-3 right-3 w-16 h-20 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-white/60 text-[10px]">
-            You
-          </div>
-        </div>
-      </Card>
+      {/* Hand-drawn illustration — same "practice, solve, grow" motif as
+          the logo/design system, not a literal product screenshot. */}
+      <div className="relative">
+        <img
+          src="/brand/hero-illustration.jpg"
+          alt="A line of people walking toward a door labeled 'your next opportunity', wearing backpacks that read practice, solve, grow"
+          className="w-full h-auto rounded-3xl select-none"
+          draggable={false}
+        />
+      </div>
     </section>
   );
 }
