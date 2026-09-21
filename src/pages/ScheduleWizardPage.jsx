@@ -144,6 +144,8 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
         type: form.interviewTypes[0],
         company: company?.name || null,
         position: positionLabel || null,
+        companySlug: form.companyId || null,
+        positionSlug: form.positionId || null,
         salaryMin: salaryRange?.min ?? null,
         salaryMax: salaryRange?.max ?? null,
       });

@@ -21,6 +21,8 @@ export async function scheduleInterview({
   type,
   company,
   position,
+  companySlug,
+  positionSlug,
   salaryMin,
   salaryMax,
 }) {
@@ -39,6 +41,8 @@ export async function scheduleInterview({
       type,
       company,
       position,
+      companySlug,
+      positionSlug,
       salaryMin,
       salaryMax,
     },
