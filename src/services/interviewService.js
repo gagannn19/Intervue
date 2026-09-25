@@ -61,8 +61,10 @@ export async function getHistoryInterviews() {
 // startedAt — this is the source of truth the timer resumes from if the
 // page gets refreshed mid-interview. Also creates (or reuses, on a
 // refresh) the Daily voice room and spawns the pipecat bot, returning
-// { ...interview, dailyRoomUrl, dailyToken } — dailyToken is this
-// candidate's own join token, minted fresh on every call.
+// { ...interview, dailyRoomUrl, dailyToken, sessionId } — dailyToken is
+// this candidate's own join token, minted fresh on every call; sessionId
+// is the backend's persisted LiveSession id for this interview's voice
+// call (same one on every call, including a page-refresh retry).
 export async function startInterview(interviewId) {
   return apiRequest(`/interviews/${interviewId}/start`, { method: "POST", auth: true });
 }

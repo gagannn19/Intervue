@@ -5,6 +5,7 @@ import { CallPanel } from "../components/interview/CallPanel";
 import { CodingPanel } from "../components/interview/CodingPanel";
 import { UserVideoPanel } from "../components/interview/UserVideoPanel";
 import { InterviewControls } from "../components/interview/InterviewControls";
+import { TurnIndicator } from "../components/interview/TurnIndicator";
 import { SessionNotes } from "../components/interview/SessionNotes";
 import { PulseAvatar } from "../components/ui/PulseAvatar";
 import { GradientButton } from "../components/ui/GradientButton";
@@ -50,6 +51,7 @@ export function InterviewPage({ config, onEnd }) {
         <div className="flex flex-col min-h-0 border-r border-white/10">
           <AIInterviewerPanel
             speaking={engine.aiSpeaking}
+            turnState={engine.turnState}
             tab={engine.tab}
             onTabChange={engine.setTab}
           />
@@ -58,7 +60,8 @@ export function InterviewPage({ config, onEnd }) {
             <CallPanel
               status={engine.callStatus}
               error={engine.callError}
-              aiSpeaking={engine.aiSpeaking}
+              turnState={engine.turnState}
+              micOn={engine.micOn}
               audioBlocked={engine.audioBlocked}
               onUnblockAudio={engine.unblockAudio}
             />
@@ -78,9 +81,11 @@ export function InterviewPage({ config, onEnd }) {
 
         <div className="flex flex-col p-5 gap-4">
           <UserVideoPanel camOn={engine.camOn} videoRef={engine.videoRef} mediaError={engine.mediaError} />
+          <TurnIndicator turnState={engine.turnState} micOn={engine.micOn} />
           <InterviewControls
             micOn={engine.micOn}
-            onToggleMic={() => engine.setMicOn((v) => !v)}
+            onToggleMic={engine.toggleMic}
+            micDisabled={engine.callStatus !== "live"}
             camOn={engine.camOn}
             onToggleCam={() => engine.setCamOn((v) => !v)}
             onEnd={engine.finishInterview}

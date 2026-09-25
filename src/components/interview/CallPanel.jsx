@@ -5,6 +5,7 @@ const STATUS_COPY = {
   connecting: "Setting up your interview…",
   joining: "Joining the call…",
   live: null,
+  finishing: "Interview ended — preparing your results…",
   ended: "Call ended.",
   error: null,
 };
@@ -14,7 +15,20 @@ const STATUS_COPY = {
 // first pass — see useInterviewEngine's file comment for why — so there's
 // nothing to render turn by turn. This just reflects call state: still
 // connecting, live, or something went wrong.
-export function CallPanel({ status, error, aiSpeaking, audioBlocked, onUnblockAudio }) {
+const TURN_COPY = {
+  waiting: "Waiting for the interviewer to join…",
+  ai_speaking: "The interviewer is speaking — listen in.",
+  ai_finished: "The interviewer is speaking — listen in.",
+  listening: "Your turn — just start speaking.",
+  user_speaking: "Listening. Take your time — pause for a moment when you're finished.",
+  user_finished: "Listening. Take your time — pause for a moment when you're finished.",
+  processing: "Got it — the interviewer is thinking…",
+  ended: "Interview ended.",
+};
+const MUTED_COPY = "Your mic is muted — unmute it when you're ready to answer.";
+const CANDIDATE_STATES = ["listening", "user_speaking", "user_finished"];
+
+export function CallPanel({ status, error, turnState, micOn = true, audioBlocked, onUnblockAudio }) {
   if (status === "error") {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
@@ -41,7 +55,7 @@ export function CallPanel({ status, error, aiSpeaking, audioBlocked, onUnblockAu
         </>
       ) : (
         <p className="text-sm text-white/40">
-          {aiSpeaking ? "The interviewer is speaking — listen in." : "You're live — speak whenever you're ready."}
+          {!micOn && CANDIDATE_STATES.includes(turnState) ? MUTED_COPY : (TURN_COPY[turnState] ?? TURN_COPY.waiting)}
         </p>
       )}
     </div>

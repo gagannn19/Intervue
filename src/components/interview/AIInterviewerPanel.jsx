@@ -2,8 +2,19 @@ import { PulseAvatar } from "../ui/PulseAvatar";
 
 // Header strip for the left column: avatar + status text + the
 // call/code tab switcher.
-export function AIInterviewerPanel({ speaking, tab, onTabChange }) {
-  const status = speaking ? "speaking…" : "listening";
+const TURN_STATUS = {
+  waiting: "connecting…",
+  ai_speaking: "speaking…",
+  ai_finished: "speaking…",
+  listening: "listening",
+  user_speaking: "listening",
+  user_finished: "listening",
+  processing: "thinking…",
+  ended: "interview ended",
+};
+
+export function AIInterviewerPanel({ speaking, turnState, tab, onTabChange }) {
+  const status = TURN_STATUS[turnState] ?? (speaking ? "speaking…" : "listening");
   return (
     <div className="p-5 flex items-center gap-4 border-b border-white/10 bg-white/[0.02]">
       <PulseAvatar size={56} speaking={speaking} label />

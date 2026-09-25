@@ -29,6 +29,8 @@ export default function App() {
   const interviews = useInterviews(auth.user);
   const nav = useAppNavigation(auth.user, auth.loading);
   const [starting, setStarting] = useState(false);
+  // One completion per interview, whatever triggers it (End button, timer).
+  const endingInterviewRef = useRef(null);
 
   // Refresh/reload handling: once we know who's logged in and their
   // interviews have loaded, if one is already in_progress on the backend,
@@ -65,7 +67,8 @@ export default function App() {
     }
   };
 
-  // "End Interview" (Phase 3.5): the visible result is now the backend's
+  // "End Interview" — the End button AND the timer reaching 00:00 (see
+  // useInterviewEngine's finishInterview). Phase 3.5: the visible result is the backend's
   // authoritative final report, aggregated from the real per-question
   // evaluations — no more mock generateFeedback().
   //   1. wait (briefly) for the final in-progress question's evaluation
@@ -73,6 +76,8 @@ export default function App() {
   //   3. if that fails hard, still complete the interview so it isn't
   //      stuck IN_PROGRESS
   const handleEndInterview = async (session) => {
+    if (endingInterviewRef.current === session.config.id) return;
+    endingInterviewRef.current = session.config.id;
     // Give the last question's evaluation a moment to land — but never
     // block the candidate on a slow Gemini call.
     try {
@@ -96,6 +101,7 @@ export default function App() {
     }
 
     await interviews.refresh();
+    endingInterviewRef.current = null;
     nav.endInterview({ config: session.config, report });
   };
 
