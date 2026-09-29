@@ -15,6 +15,27 @@ import { startInterview } from "../services/interviewService";
 // reflect basic call state (connecting/live/error, who's speaking, mic/cam
 // mute) back to the UI.
 //
+// Automatic turn-taking: no button. The bot detects when the candidate
+// starts and stops speaking (VAD) and owns the real turn state, broadcasting
+// it as Daily app-messages ({type: "cuecast-state", state}) — see
+// cuecast-pipecat-langchain's orchestrator_client.py. We only ask for it
+// ({type: "cuecast-turn", action: "sync"}) until it first arrives.
+//
+// Barge-in: the mic stays published while the interviewer speaks too, so the
+// candidate can talk over it; the bot decides whether that was really the
+// candidate (words, not echo/noise) and interrupts itself. Echo protection is
+// the browser's echo cancellation (requested explicitly below) plus that
+// server-side check. The mic is only closed before the bot has reported a
+// state ("waiting") and after the interview ends.
+//
+// Mic button: a plain mute/unmute on top of that — muted = never published,
+// and the bot is told ({type: "cuecast-mic", muted}) so it ignores speech.
+//
+// Ending: the End button and the timer reaching 00:00 both call
+// finishInterview() -> onEnd -> the backend's single end-interview path
+// (POST /interviews/:id/report). The backend also enforces the time limit
+// on its own, so a closed tab still ends on time.
+//
 // First pass, audio round-trip only: there is no live transcript/caption
 // channel back to this browser, so the coding panel always shows the
 // interview's main problem rather than tracking which question the
@@ -22,6 +43,28 @@ import { startInterview } from "../services/interviewService";
 // captions are ever added (would need a backend -> frontend channel, e.g.
 // Daily app-messages from the orchestrator, which doesn't exist yet).
 // ---------------------------------------------------------------------------
+
+const TURN_MESSAGE = "cuecast-turn";
+const STATE_MESSAGE = "cuecast-state";
+const MIC_MESSAGE = "cuecast-mic";
+const BOT_USER_NAME = "Cuecast AI";
+// Bot states in which the (unmuted) mic is published: every state the bot
+// reports — including the interviewer's own turn, for barge-in.
+const MIC_LIVE_STATES = new Set([
+  "listening",
+  "user_speaking",
+  "user_finished",
+  "processing",
+  "ai_speaking",
+  "ai_finished",
+]);
+// Browser-side processing for the mic. Echo cancellation is what keeps the
+// interviewer's voice (played by this page) out of the mic during barge-in;
+// these are the browser defaults, requested explicitly so they can't drift.
+const MIC_CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+// Until the bot has told us its state (it may join after us, or a message
+// can be lost), keep asking.
+const SYNC_RETRY_MS = 3000;
 
 export function useInterviewEngine(config, onEnd) {
   const mainProblem = QUESTION_BANK[config.difficulty.toLowerCase()];
@@ -33,12 +76,27 @@ export function useInterviewEngine(config, onEnd) {
   const [questionsRetryKey, setQuestionsRetryKey] = useState(0);
 
   // "connecting" (ensuring questions + starting the backend session) ->
-  // "joining" (Daily join in flight) -> "live" -> "ended" | "error"
+  // "joining" (Daily join in flight) -> "live" -> "finishing" (we ended the
+  // interview; results on the way) | "ended" (call dropped) | "error"
   const [callStatus, setCallStatus] = useState("connecting");
   const [callError, setCallError] = useState(null);
-  const [aiSpeaking, setAiSpeaking] = useState(false);
-
+  // The interviewer bot's turn state, as it reports it: "waiting" (no
+  // state received yet / bot not in the room) | "ai_speaking" |
+  // "ai_finished" | "listening" | "user_speaking" | "user_finished" |
+  // "processing".
+  const [turnState, setTurnState] = useState("waiting");
+  // Read inside Daily event handlers, which are registered once.
+  const turnStateRef = useRef("waiting");
+  // Candidate's own mute toggle (true = not muted by the candidate).
   const [micOn, setMicOn] = useState(true);
+  const micOnRef = useRef(true);
+  // finishInterview runs once, however many triggers fire (button, timer).
+  const endingRef = useRef(false);
+  // Backend's persisted LiveSession id for this interview's voice call
+  // (see interviewService.js's startInterview). Not shown anywhere in the
+  // UI yet — kept available for future use (e.g. reconnect/debugging).
+  const [sessionId, setSessionId] = useState(null);
+
   const [camOn, setCamOn] = useState(true);
   const [mediaError, setMediaError] = useState(null);
   // True if the browser blocked autoplay of the bot's voice (rare, but
@@ -72,12 +130,31 @@ export function useInterviewEngine(config, onEnd) {
     return () => clearInterval(t);
   }, [ended]);
 
+  // Publish the mic only when the bot is live in the call and the candidate
+  // hasn't muted it.
+  const applyMic = useCallback((call) => {
+    call?.setLocalAudio(micOnRef.current && MIC_LIVE_STATES.has(turnStateRef.current));
+  }, []);
+
+  // Ask the bot for its turn state and tell it our mute state (a bot that
+  // just (re)joined knows neither).
+  const syncWithBot = useCallback((call) => {
+    call?.sendAppMessage({ type: TURN_MESSAGE, action: "sync" }, "*");
+    call?.sendAppMessage({ type: MIC_MESSAGE, muted: !micOnRef.current }, "*");
+  }, []);
+
   // Ensure this interview's AI questions exist (so the backend's voice
   // orchestrator has a full question sequence to work through), start the
   // voice session (creates/reuses the Daily room + spawns the pipecat bot,
   // returns this candidate's own join token), then join the call.
   useEffect(() => {
     if (startedRef.current) return;
+    // Time already up (e.g. a reload after the deadline): don't rejoin —
+    // the timer effect ends the interview straight away.
+    if (initialSeconds <= 0) {
+      setQuestionsLoading(false);
+      return;
+    }
     let active = true;
 
     (async () => {
@@ -100,8 +177,9 @@ export function useInterviewEngine(config, onEnd) {
         if (!session.dailyRoomUrl || !session.dailyToken) {
           throw new Error("The backend didn't return a room to join.");
         }
+        setSessionId(session.sessionId ?? null);
 
-        const call = Daily.createCallObject();
+        const call = Daily.createCallObject({ inputSettings: { audio: { settings: MIC_CONSTRAINTS } } });
         callRef.current = call;
 
         call
@@ -125,11 +203,29 @@ export function useInterviewEngine(config, onEnd) {
               audioEl.play().catch(() => setAudioBlocked(true));
             }
           })
-          .on("active-speaker-change", (ev) => {
-            const localId = call.participants().local?.session_id;
-            setAiSpeaking(Boolean(ev.activeSpeaker?.peerId) && ev.activeSpeaker.peerId !== localId);
+          .on("app-message", (ev) => {
+            if (ev?.data?.type !== STATE_MESSAGE || typeof ev.data.state !== "string") return;
+            // Mic follows the bot's state (live once the bot reports one)
+            // and the mute button.
+            turnStateRef.current = ev.data.state;
+            applyMic(call);
+            setTurnState(ev.data.state);
           })
-          .on("left-meeting", () => setCallStatus((s) => (s === "error" ? s : "ended")))
+          .on("participant-joined", (ev) => {
+            if (ev?.participant?.user_name === BOT_USER_NAME) {
+              syncWithBot(call);
+            }
+          })
+          .on("participant-left", (ev) => {
+            if (ev?.participant?.user_name === BOT_USER_NAME) {
+              turnStateRef.current = "waiting";
+              applyMic(call);
+              setTurnState("waiting");
+            }
+          })
+          .on("left-meeting", () =>
+            setCallStatus((s) => (s === "error" ? s : endingRef.current ? "finishing" : "ended")),
+          )
           .on("camera-error", () => setMediaError("denied"))
           .on("error", (ev) => {
             setCallError(ev?.errorMsg || "The call encountered an error.");
@@ -139,22 +235,20 @@ export function useInterviewEngine(config, onEnd) {
         setCallStatus("joining");
         await call.join({ url: session.dailyRoomUrl, token: session.dailyToken });
         if (!active) return;
+        if (endingRef.current) {
+          // The interview ended while we were still joining.
+          call.leave().catch(() => {});
+          return;
+        }
         // Explicitly (re-)apply mic/cam state to the real call object now
-        // that it actually exists. The separate `[micOn]`/`[camOn]` effects
-        // below exist for when the user later toggles a button — but since
-        // callRef.current is only assigned here, asynchronously, those
-        // effects' *first* run (on mount, with micOn/camOn still at their
-        // initial value) fires before this async function has gotten this
-        // far and silently no-ops on a still-null callRef.current. If the
-        // user never touches the mic button afterward, that dependency
-        // never changes again, so setLocalAudio(true) would otherwise never
-        // reach the real object at all — the candidate's mic stays
-        // unpublished (well-formed but all-silent audio frames, no error
-        // anywhere) despite the UI showing it as on. video has a fallback
-        // for this (track-started re-attaches it regardless); audio didn't.
-        call.setLocalAudio(micOn);
+        // that it actually exists — the `[camOn]` effect below first runs
+        // before callRef.current is assigned and no-ops. The mic stays
+        // unpublished until the bot reports the candidate has the floor
+        // (the app-message handler above is the only thing that enables it).
+        applyMic(call);
         call.setLocalVideo(camOn);
         setCallStatus("live");
+        syncWithBot(call);
       } catch (err) {
         if (!active) return;
         setQuestionsLoading(false);
@@ -191,8 +285,20 @@ export function useInterviewEngine(config, onEnd) {
   }, []);
 
   useEffect(() => {
-    callRef.current?.setLocalAudio(micOn);
-  }, [micOn]);
+    if (callStatus !== "live" || turnState !== "waiting") return;
+    const t = setInterval(() => syncWithBot(callRef.current), SYNC_RETRY_MS);
+    return () => clearInterval(t);
+  }, [callStatus, turnState, syncWithBot]);
+
+  // Mute/unmute — takes effect immediately, in any bot state (so unmuting
+  // while the interviewer speaks lets the candidate barge in).
+  const toggleMic = useCallback(() => {
+    micOnRef.current = !micOnRef.current;
+    setMicOn(micOnRef.current);
+    const call = callRef.current;
+    applyMic(call);
+    call?.sendAppMessage({ type: MIC_MESSAGE, muted: !micOnRef.current }, "*");
+  }, [applyMic]);
 
   // Toggling camOn unmounts/remounts the <video> element (see
   // UserVideoPanel), so re-attach the already-known local track whenever
@@ -226,19 +332,33 @@ export function useInterviewEngine(config, onEnd) {
     }, 900);
   };
 
-  const finishInterview = useCallback(() => {
-    setEnded(true);
-    const call = callRef.current;
-    if (call) {
-      call.leave().catch(() => {});
-    }
-    // Per-question evaluation now happens server-side as the voice
-    // conversation progresses (see backend src/ws/orchestrator.ts), and
-    // the trailing in-progress question is finalized by the backend
-    // itself when the report is requested — nothing left for the
-    // frontend to await here.
-    onEnd({ config, finalizeEvaluation: () => Promise.resolve() });
-  }, [config, onEnd]);
+  // One way out for both the End button ("manual") and 00:00 ("timeout").
+  const finishInterview = useCallback(
+    (reason = "manual") => {
+      if (endingRef.current) return;
+      endingRef.current = true;
+      setEnded(true);
+      setCallStatus((s) => (s === "error" ? s : "finishing"));
+      turnStateRef.current = "ended";
+      setTurnState("ended");
+      const call = callRef.current;
+      if (call) {
+        call.setLocalAudio(false);
+        call.leave().catch(() => {});
+      }
+      // Per-question evaluation happens server-side as the voice
+      // conversation progresses (see backend src/ws/orchestrator.ts), and
+      // the trailing in-progress question is finalized by the backend's
+      // end-interview service — nothing left for the frontend to await.
+      onEnd({ config, reason, finalizeEvaluation: () => Promise.resolve() });
+    },
+    [config, onEnd],
+  );
+
+  // Time's up -> end, exactly like the End button (minus the confirm).
+  useEffect(() => {
+    if (seconds === 0) finishInterview("timeout");
+  }, [seconds, finishInterview]);
 
   const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
   const secs = String(seconds % 60).padStart(2, "0");
@@ -250,11 +370,13 @@ export function useInterviewEngine(config, onEnd) {
     retryQuestions,
     callStatus,
     callError,
-    aiSpeaking,
+    aiSpeaking: turnState === "ai_speaking",
+    turnState,
+    micOn,
+    toggleMic,
+    sessionId,
     audioBlocked,
     unblockAudio,
-    micOn,
-    setMicOn,
     camOn,
     setCamOn,
     mediaError,

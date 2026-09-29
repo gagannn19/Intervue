@@ -4,6 +4,7 @@ const CALL_STATUS_LABEL = {
   connecting: "Connecting…",
   joining: "Joining call…",
   live: "Live",
+  finishing: "Ending…",
   ended: "Ended",
   error: "Error",
 };
