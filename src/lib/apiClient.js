@@ -5,12 +5,12 @@
 
 import { auth } from "./firebase";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 // The backend authenticates requests by verifying the current user's
 // Firebase ID token. getIdToken() returns a cached token and refreshes it
 // automatically when it's close to expiring.
-async function getIdToken() {
+export async function getIdToken() {
   const user = auth?.currentUser;
   if (!user) return null;
   try {

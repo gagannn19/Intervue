@@ -1,4 +1,5 @@
 import { useInterviewEngine } from "../hooks/useInterviewEngine";
+import { useInterviewVisuals } from "../hooks/useInterviewVisuals";
 import { InterviewHeader } from "../components/interview/InterviewHeader";
 import { AIInterviewerPanel } from "../components/interview/AIInterviewerPanel";
 import { CallPanel } from "../components/interview/CallPanel";
@@ -7,6 +8,7 @@ import { UserVideoPanel } from "../components/interview/UserVideoPanel";
 import { InterviewControls } from "../components/interview/InterviewControls";
 import { TurnIndicator } from "../components/interview/TurnIndicator";
 import { SessionNotes } from "../components/interview/SessionNotes";
+import { VisualPanel } from "../components/interview/VisualPanel";
 import { PulseAvatar } from "../components/ui/PulseAvatar";
 import { GradientButton } from "../components/ui/GradientButton";
 import { disp } from "../constants/theme";
@@ -15,6 +17,9 @@ import { disp } from "../constants/theme";
 // focus-mode call UI, not part of that theme's scope (see project README).
 export function InterviewPage({ config, onEnd }) {
   const engine = useInterviewEngine(config, onEnd);
+  // The interviewer's optional visual explanations (SSE, separate from the
+  // call audio) — only while the call is live.
+  const visuals = useInterviewVisuals(config.id, engine.callStatus === "live");
 
   if (engine.questionsLoading) {
     return (
@@ -54,6 +59,13 @@ export function InterviewPage({ config, onEnd }) {
             turnState={engine.turnState}
             tab={engine.tab}
             onTabChange={engine.setTab}
+          />
+
+          <VisualPanel
+            visuals={visuals.visuals}
+            hiddenCount={visuals.hiddenCount}
+            onHide={visuals.hide}
+            onShowHidden={visuals.showHidden}
           />
 
           {engine.tab === "call" ? (
