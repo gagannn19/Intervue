@@ -17,6 +17,8 @@ export function useInterviews(user) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(!!user);
   const [error, setError] = useState(null);
+  // Whose interviews are in state (uid), once a load has finished.
+  const [loadedFor, setLoadedFor] = useState(null);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -24,6 +26,7 @@ export function useInterviews(user) {
       setInProgress(null);
       setHistory([]);
       setLoading(false);
+      setLoadedFor(null);
       return;
     }
     setLoading(true);
@@ -46,10 +49,17 @@ export function useInterviews(user) {
       setError(err.message || "Couldn't load your interviews.");
     } finally {
       setLoading(false);
+      setLoadedFor(user.uid);
     }
   }, [user]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  return { upcoming, inProgress, history, loading, error, refresh };
+  // Also loading while the data isn't this user's yet — e.g. the render
+  // right after login, before the effect above has even started the
+  // fetch. Otherwise the dashboard shows "no interviews" for a moment and
+  // App's resume-after-refresh check decides nothing is in progress.
+  const loadingForUser = loading || (!!user && loadedFor !== user.uid);
+
+  return { upcoming, inProgress, history, loading: loadingForUser, error, refresh };
 }

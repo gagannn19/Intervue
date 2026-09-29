@@ -167,6 +167,7 @@ export default function App() {
           user={auth.user}
           history={interviews.history}
           upcoming={interviews.upcoming}
+          loading={interviews.loading}
           onSchedule={() => nav.setScreen("schedule")}
           onJoin={handleStartInterview}
           onViewHistory={() => nav.setScreen("history")}
