@@ -2,8 +2,9 @@ import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { ScoreRing } from "../ui/ScoreRing";
 import { diffTone } from "../../utils/difficulty";
+import { Skeleton } from "../ui/Skeleton";
 
-export function RecentInterviews({ history, onViewAll }) {
+export function RecentInterviews({ history, loading, onViewAll }) {
   return (
     <>
       <div className="flex items-center justify-between mb-3">
@@ -11,10 +12,20 @@ export function RecentInterviews({ history, onViewAll }) {
         <button onClick={onViewAll} className="text-xs font-semibold text-[#CC5500]">View all</button>
       </div>
       <Card className="divide-y divide-[var(--ink)]/6">
-        {history.length === 0 && (
+        {loading &&
+          [0, 1, 2].map((i) => (
+            <div key={i} className="p-4 flex items-center gap-4">
+              <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        {!loading && history.length === 0 && (
           <p className="p-6 text-sm text-[var(--ink)]/45">Nothing here yet — your first interview will show up after you finish it.</p>
         )}
-        {history.slice(0, 3).map((h) => (
+        {!loading && history.slice(0, 3).map((h) => (
           <div key={h.id} className="p-4 flex items-center gap-4">
             {typeof h.score === "number" ? (
               <ScoreRing score={h.score} size={40} />

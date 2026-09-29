@@ -2,8 +2,21 @@ import { Clock, ChevronRight, Zap } from "lucide-react";
 import { Card } from "../ui/Card";
 import { GradientButton } from "../ui/GradientButton";
 import { GhostButton } from "../ui/GhostButton";
+import { Skeleton } from "../ui/Skeleton";
 
-export function UpcomingInterview({ upcoming, onSchedule, onJoin }) {
+export function UpcomingInterview({ upcoming, loading, onSchedule, onJoin }) {
+  if (loading) {
+    return (
+      <Card className="p-5 mb-6 flex items-center gap-4">
+        <Skeleton className="w-11 h-11 rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </Card>
+    );
+  }
+
   if (upcoming) {
     return (
       <Card className="p-5 mb-6 flex items-center justify-between flex-wrap gap-4 border-[#FF7A00]/30">
