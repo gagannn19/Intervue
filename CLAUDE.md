@@ -64,11 +64,13 @@ Flow:
 6. **Ending.** The End button and the timer reaching 00:00 both call `finishInterview(reason)` (runs once: mic off, `call.leave()`, `callStatus` "finishing") -> `App.jsx`'s `handleEndInterview` (also guarded) -> `POST /interviews/:id/report` (the backend's single end-interview path) -> result page. The backend enforces the time limit on its own too, so a closed tab still ends on time; a reload after the deadline doesn't rejoin, it ends straight away.
 6. Ending the call: `call.leave()`, then the existing report flow (`App.jsx`'s `handleEndInterview` → `generateReport`) runs unchanged — the backend now finalizes any trailing evaluation server-side (see `intervue-backend`'s CLAUDE.md), so `finalizeEvaluation` here is a no-op.
 
+**Visual explanations (SSE).** The one backend→frontend channel during the call. The AI controls which visuals are on screen — any number, by stable id (usually one). `useInterviewVisuals(config.id, callStatus === "live")` reads `GET /interviews/:id/visuals/stream` via `services/interviewVisualService.js` (fetch + stream parsing, NOT EventSource — it can't send the Firebase `Authorization` header; reconnects with backoff) and applies lifecycle events with the pure reducer `hooks/visualState.js` (tested: `npm test`, `node --test`): `visual.snapshot` (replace all — sent on every (re)connect), `visual.create`, `visual.update` (same id, newer `version`), `visual.remove` (that id only). State is a map by id, never a single "current visual"; nothing waits on the user. The X button only HIDES a visual locally ("Show N hidden" restores; an AI update shows it again) — it never changes interview state. `components/interview/VisualPanel.jsx` stacks the cards (scrolls past ~45vh) and renders each ONLY inside `<iframe sandbox="allow-scripts" srcDoc>` keyed by id+version (no allow-same-origin → opaque origin: no cookies/storage/parent DOM/navigation/popups), document built by `lib/visualDocument.js` (CSP with no network, app-owned dark design tokens `--fg --muted --accent --accent-2 --panel --border`, JS timers stopped after 60s). Renders nothing when there are none. The voice never comes through this channel — it's Daily audio as always.
+
 **Known limitation (first pass, intentional for now):** no live captions —
 the coding panel always shows the interview's main problem rather than
 tracking which question the server-side conversation has actually
-advanced to, since there's currently no backend→frontend channel during
-the call to signal that. Revisit if live captions are ever added.
+advanced to — the visual SSE channel above could carry that later, but
+doesn't yet. Revisit if live captions are ever added.
 
 **Removed as part of this change** (fully superseded, not kept for
 backwards compat): `Transcript.jsx`, `AnswerInput.jsx`,
