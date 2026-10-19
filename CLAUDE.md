@@ -76,6 +76,17 @@ backwards compat): `Transcript.jsx`, `AnswerInput.jsx`,
 `aiService.js` (browser `speechSynthesis` mock TTS — real TTS is
 ElevenLabs, via the pipecat bot, now).
 
+## Interview access (invite-only)
+
+Only emails an admin allowed (admin app's "Interview Access" page) can
+start an interview. `App.jsx`'s `handleStartInterview` ("Join now")
+catches the backend's 403 `code: "INTERVIEW_ACCESS_REQUIRED"` (`apiClient`
+puts `status`/`code` on thrown errors) and opens
+`components/dashboard/InterviewAccessModal.jsx` (state in
+`hooks/useInterviewAccess.js`, calls in `services/interviewAccessService.js`):
+"Request access" when the candidate never asked, "Check again" (retries the
+join) while the request is pending admin approval.
+
 ## Environment variables
 
 All `VITE_*` — see `.env.example`. `VITE_API_URL` is intervue-backend's

@@ -43,7 +43,12 @@ export async function apiRequest(path, { method = "GET", body, auth: needsAuth =
   const payload = await res.json().catch(() => null);
 
   if (!res.ok || !payload?.success) {
-    throw new Error(payload?.message || `Request failed (${res.status})`);
+    const error = new Error(payload?.message || `Request failed (${res.status})`);
+    // `code` is set by the backend only when the caller needs to branch on
+    // the kind of failure (e.g. "INTERVIEW_ACCESS_REQUIRED").
+    error.status = res.status;
+    error.code = payload?.code;
+    throw error;
   }
 
   return payload.data;
