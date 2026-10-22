@@ -41,3 +41,13 @@ export function applyVisualEvent(state, event) {
 export function orderedVisuals(state) {
   return Object.values(state).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
 }
+
+// The one slide to show: the one the interviewer's voice is on (`pointer`,
+// from the bot) once it has arrived; until then — the voice can reach a
+// slide before its code does — the slide already showing; failing that
+// (fresh connection, or a bot that sends no pointers) the oldest one.
+export function pickSlide(state, pointer, showingId) {
+  if (pointer && state[pointer]) return state[pointer];
+  if (showingId && state[showingId]) return state[showingId];
+  return orderedVisuals(state)[0] ?? null;
+}

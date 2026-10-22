@@ -2,7 +2,7 @@
 // same lifecycle events the SSE stream delivers. Run: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { EMPTY_VISUALS, applyVisualEvent, orderedVisuals } from "./visualState.js";
+import { EMPTY_VISUALS, applyVisualEvent, orderedVisuals, pickSlide } from "./visualState.js";
 
 const v = (id, title, createdAt, version = 1) => ({ id, title, createdAt, version, html: "<div></div>", css: "", js: "" });
 const titles = (state) => orderedVisuals(state).map((x) => x.title);
@@ -45,4 +45,25 @@ test("removing an unknown id or unknown event types change nothing", () => {
   const s = run([{ type: "visual.create", visual: v("a", "A", "1") }]);
   assert.equal(applyVisualEvent(s, { type: "visual.remove", visualId: "nope" }), s);
   assert.equal(applyVisualEvent(s, { type: "something.else" }), s);
+});
+
+test("pickSlide: the slide the voice is on, once it has arrived", () => {
+  const s = run([{ type: "visual.create", visual: v("a", "A", "1") }, { type: "visual.create", visual: v("b", "B", "2") }]);
+  assert.equal(pickSlide(s, "b", "a").title, "B");
+  // The voice reached slide c before its code did: keep showing what's showing.
+  assert.equal(pickSlide(s, "c", "a").title, "A");
+  // Nothing pointed at yet (fresh connection / older bot): the oldest.
+  assert.equal(pickSlide(s, null, null).title, "A");
+  assert.equal(pickSlide(EMPTY_VISUALS, "b", "a"), null);
+});
+
+test("a new deck replaces the old one without a blank screen", () => {
+  // Old slide showing; the voice moves to the new deck's first slide before
+  // its code arrives, then it's created, then the old one is removed.
+  let s = run([{ type: "visual.create", visual: v("old", "Old", "1") }]);
+  assert.equal(pickSlide(s, "new", "old").title, "Old");
+  s = run([{ type: "visual.create", visual: v("new", "New", "2") }], s);
+  assert.equal(pickSlide(s, "new", "old").title, "New");
+  s = run([{ type: "visual.remove", visualId: "old" }], s);
+  assert.equal(pickSlide(s, "new", "new").title, "New");
 });

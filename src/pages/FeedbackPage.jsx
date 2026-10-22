@@ -26,7 +26,7 @@ export function FeedbackPage({ session, onBackToDashboard, onHistory }) {
   // never a fabricated score.
   if (!report) {
     return (
-      <div className="p-6 sm:p-10 max-w-4xl">
+      <div className="p-6 sm:p-10 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>Interview feedback</h1>
@@ -52,7 +52,7 @@ export function FeedbackPage({ session, onBackToDashboard, onHistory }) {
   const areas = report.areasToImprove || [];
 
   return (
-    <div className="p-6 sm:p-10 max-w-4xl">
+    <div className="p-6 sm:p-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5">

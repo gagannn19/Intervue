@@ -4,7 +4,7 @@ import { Card } from "../components/ui/Card";
 import { GradientButton } from "../components/ui/GradientButton";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { GoogleButton } from "../components/auth/GoogleButton";
-import { disp, themeVars } from "../constants/theme";
+import { brand, disp, themeVars } from "../constants/theme";
 
 const inputCls = "w-full mt-2 rounded-xl border border-[var(--ink)]/12 bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm outline-none focus:border-[#FF7A00]";
 
@@ -41,11 +41,11 @@ export function SignupPage({ onSignup, onGoogle, onGoToLogin, onBack, dark, onTo
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col transition-colors duration-300" style={{ ...themeVars(dark), fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col transition-colors duration-300" style={{ ...themeVars(dark) }}>
       <header className="max-w-7xl w-full mx-auto flex items-center justify-between px-6 py-5">
         <button onClick={onBack} className="flex items-center gap-2">
           <img src="/brand/logo-mark.png" alt="" className="w-8 h-8" />
-          <span className="font-semibold text-2xl text-[var(--ink)]" style={disp}>Cuecast</span>
+          <span className="font-semibold text-2xl text-[var(--ink)]" style={brand}>Cuecast</span>
         </button>
         <ThemeToggle dark={dark} onToggle={onToggleDark} />
       </header>

@@ -2,7 +2,7 @@ import { ChevronRight, Star } from "lucide-react";
 import { GradientButton } from "../ui/GradientButton";
 import { useRotatingText } from "../../hooks/useRotatingText";
 import { HERO_VARIANTS } from "../../constants/heroContent";
-import { disp } from "../../constants/theme";
+import { brand } from "../../constants/theme";
 
 // Rotating description: fades between variants, pauses on hover, respects
 // prefers-reduced-motion, and reserves a fixed height so nothing jumps.
@@ -21,7 +21,7 @@ export function Hero({ onSchedule }) {
   return (
     <section className="max-w-7xl mx-auto px-6 pt-10 pb-20 grid lg:grid-cols-2 gap-14 items-center">
       <div>
-        <h1 className="text-[46px] sm:text-[58px] leading-[1.08] font-semibold text-[var(--ink)]" style={disp}>
+        <h1 className="text-[46px] sm:text-[58px] leading-[1.08] font-semibold text-[var(--ink)]" style={brand}>
           Your next interview
           <br />
           starts <span className="relative inline-block">

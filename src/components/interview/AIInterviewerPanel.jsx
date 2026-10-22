@@ -1,4 +1,5 @@
-import { PulseAvatar } from "../ui/PulseAvatar";
+import { InterviewerOrb } from "./InterviewerOrb";
+import { useAudioAnalyser } from "../../hooks/useAudioAnalyser";
 
 // Header strip for the left column: avatar + status text + the
 // call/code tab switcher.
@@ -13,13 +14,16 @@ const TURN_STATUS = {
   ended: "interview ended",
 };
 
-export function AIInterviewerPanel({ speaking, turnState, tab, onTabChange }) {
+export function AIInterviewerPanel({ speaking, turnState, audioTrack, tab, onTabChange }) {
   const status = TURN_STATUS[turnState] ?? (speaking ? "speaking…" : "listening");
+  const analyserRef = useAudioAnalyser(audioTrack);
   return (
-    <div className="p-5 flex items-center gap-4 border-b border-white/10 bg-white/[0.02]">
-      <PulseAvatar size={56} speaking={speaking} label />
+    <div className="px-4 py-2 flex items-center gap-3 border-b border-white/10 bg-white/[0.02]">
+      <InterviewerOrb analyserRef={analyserRef} turnState={turnState} size={96} />
       <div>
-        <p className="text-sm font-semibold">AI Interviewer</p>
+        <p className="text-sm font-semibold">
+          Kathy <span className="font-normal text-white/45">(AI Interviewer)</span>
+        </p>
         <p className="text-xs text-white/40">{status}</p>
       </div>
       <div className="ml-auto flex gap-1 bg-white/5 rounded-lg p-1">

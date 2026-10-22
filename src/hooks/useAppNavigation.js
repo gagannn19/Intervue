@@ -22,6 +22,9 @@ export function useAppNavigation(user, authLoading) {
   const [screen, setScreen] = useState("landing");
   const [activeConfig, setActiveConfig] = useState(null);
   const [lastSession, setLastSession] = useState(null);
+  // Quick start reuses the schedule screen minus the date/time step: the
+  // interview is scheduled for "now" and started straight away.
+  const [quickStart, setQuickStart] = useState(false);
 
   // Route protection, both directions.
   useEffect(() => {
@@ -33,7 +36,14 @@ export function useAppNavigation(user, authLoading) {
   const goToLanding = () => setScreen("landing");
   const goToLogin = () => setScreen("login");
   const goToSignup = () => setScreen("signup");
-  const goToSchedule = () => setScreen(user ? "schedule" : "login");
+  const goToSchedule = () => {
+    setQuickStart(false);
+    setScreen(user ? "schedule" : "login");
+  };
+  const goToQuickStart = () => {
+    setQuickStart(true);
+    setScreen(user ? "schedule" : "login");
+  };
   const backFromSchedule = () => setScreen("dashboard");
 
   // Used both for a fresh "Join now" (after the backend /start call) and
@@ -67,10 +77,12 @@ export function useAppNavigation(user, authLoading) {
     setScreen,
     activeConfig,
     lastSession,
+    quickStart,
     goToLanding,
     goToLogin,
     goToSignup,
     goToSchedule,
+    goToQuickStart,
     backFromSchedule,
     joinInterview,
     endInterview,

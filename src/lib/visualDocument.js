@@ -46,7 +46,7 @@ html, body { margin: 0; background: var(--bg); color: var(--fg);
 body { min-height: 100vh; display: flex; padding: 14px; }
 /* Own stacking context + positioning origin: a negative z-index or an
    absolutely positioned piece stays inside the visual, above the background. */
-#visual-root { position: relative; isolation: isolate; margin: auto; max-width: 100%; }
+#visual-root { position: relative; isolation: isolate; margin: auto; max-width: 100%; transform-origin: center; }
 /* --- Diagram kit: ready-made pieces the AI composes (see the backend prompt).
    Gives every visual the same polished look with less generated code. --- */
 body { background: radial-gradient(120% 90% at 50% 0%, #1a1a3a 0%, var(--bg) 70%); }
@@ -99,6 +99,23 @@ const TIMER_GUARD = `(() => {
   st(() => { stopped = true; ids.t.forEach(ct); ids.i.forEach(ci); ids.r.forEach(craf); }, ${VISUAL_JS_LIFETIME_MS});
 })();`;
 
+// Visuals are designed for a ~560x220 panel; the room shows them much
+// larger, so scale the whole visual up (never down past 1x) to fit the
+// frame, and refit when the frame or the visual's own size changes.
+const FIT_TO_FRAME = `(() => {
+  const root = document.getElementById("visual-root");
+  const fit = () => {
+    root.style.transform = "none";
+    const w = root.offsetWidth, h = root.offsetHeight;
+    if (!w || !h) return;
+    const s = Math.min((innerWidth - 40) / w, (innerHeight - 40) / h, 2.4);
+    root.style.transform = s > 1 ? "scale(" + s + ")" : "none";
+  };
+  new ResizeObserver(fit).observe(root);
+  addEventListener("resize", fit);
+  fit();
+})();`;
+
 // Never let generated text close the <style>/<script> it's placed in.
 const noClose = (text, tag) => String(text || "").replace(new RegExp(`</?${tag}`, "gi"), "");
 
@@ -110,5 +127,5 @@ export function buildVisualDocument({ html, css, js }) {
 <meta http-equiv="Content-Security-Policy" content="${CSP}">
 <style>${BASE_CSS}</style>
 <style>${noClose(css, "style")}</style>
-</head><body><div id="visual-root">${noClose(html, "script")}</div>${script}</body></html>`;
+</head><body><div id="visual-root">${noClose(html, "script")}</div><script>${FIT_TO_FRAME}</script>${script}</body></html>`;
 }

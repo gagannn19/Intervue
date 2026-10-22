@@ -9,6 +9,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "../lib/firebase";
+import { apiRequest } from "../lib/apiClient";
 
 const NOT_CONFIGURED_MSG =
   "Firebase isn't configured yet. Add your VITE_FIREBASE_* values to .env and restart the dev server.";
@@ -79,6 +80,22 @@ function friendlyAuthError(err) {
   }
 }
 
+// intervue-backend's requireAuth may gate sign-in with an email allowlist
+// (ALLOWED_EMAILS) — Firebase itself has no such allowlist, so a
+// not-on-the-list account can still complete Firebase sign-in. Calling
+// GET /auth/me right after catches that immediately: on a 403 (or any
+// other failure) it signs the Firebase session back out before the app
+// ever considers the user logged in, rather than leaving them "signed
+// into Firebase" while every subsequent API call silently 403s.
+async function verifyBackendAccess() {
+  try {
+    await apiRequest("/auth/me", { auth: true });
+  } catch (err) {
+    await signOut(auth).catch(() => {});
+    throw err;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -104,6 +121,7 @@ export function AuthProvider({ children }) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (name) await updateProfile(cred.user, { displayName: name });
+      await verifyBackendAccess();
       const appUser = toAppUser(cred.user);
       setUser(appUser); // reflect displayName immediately
       return appUser;
@@ -116,6 +134,7 @@ export function AuthProvider({ children }) {
     if (!isFirebaseConfigured) throw new Error(NOT_CONFIGURED_MSG);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      await verifyBackendAccess();
       const appUser = toAppUser(cred.user);
       setUser(appUser);
       return appUser;
@@ -128,6 +147,7 @@ export function AuthProvider({ children }) {
     if (!isFirebaseConfigured) throw new Error(NOT_CONFIGURED_MSG);
     try {
       const cred = await signInWithPopup(auth, googleProvider);
+      await verifyBackendAccess();
       const appUser = toAppUser(cred.user);
       setUser(appUser);
       return appUser;

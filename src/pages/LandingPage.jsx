@@ -11,7 +11,7 @@ import { themeVars } from "../constants/theme";
 
 export function LandingPage({ onSchedule, onLogin, dark, onToggleDark }) {
   return (
-    <div className="min-h-screen bg-[var(--bg)] transition-colors duration-300" style={{ ...themeVars(dark), fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[var(--bg)] transition-colors duration-300" style={{ ...themeVars(dark) }}>
       <Navbar onSchedule={onSchedule} onLogin={onLogin} dark={dark} onToggleDark={onToggleDark} />
       <Hero onSchedule={onSchedule} />
       <Features />

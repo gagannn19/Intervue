@@ -1,20 +1,16 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { subscribeToInterviewVisuals } from "../services/interviewVisualService";
-import { EMPTY_VISUALS, applyVisualEvent, orderedVisuals } from "./visualState";
+import { EMPTY_VISUALS, applyVisualEvent, pickSlide } from "./visualState";
 
-// The AI interviewer's visual explanations currently on screen during a
-// live interview — any number, keyed by stable id (see visualState.js).
-// The AI decides what's on screen; the backend streams lifecycle events
-// (snapshot / create / update / remove). Subscribed only while `active`
-// (the call is live); ending the call or leaving the page drops them.
-//
-// Closing a visual (X) only HIDES it on this screen: it doesn't tell the
-// AI or change interview state, and nothing waits on it — new visuals
-// appear regardless. Hidden ones can be shown again; one the AI updates
-// comes back by itself, since the AI is pointing at it again.
-export function useInterviewVisuals(interviewId, active) {
+// The interviewer's slides during a live interview. The backend streams
+// each slide's visual as soon as its code is ready (snapshot / create /
+// remove events, keyed by stable id — see visualState.js); the bot says
+// which one the voice is on (`currentSlideId`, from useInterviewEngine).
+// Returns the ONE slide to show. Subscribed only while `active` (the call
+// is live); ending the call or leaving the page drops them.
+export function useInterviewVisuals(interviewId, active, currentSlideId) {
   const [byId, dispatch] = useReducer(applyVisualEvent, EMPTY_VISUALS);
-  const [hidden, setHidden] = useState(() => new Map()); // visualId -> version hidden
+  const [showingId, setShowingId] = useState(null);
 
   useEffect(() => {
     if (!active || !interviewId) {
@@ -22,9 +18,9 @@ export function useInterviewVisuals(interviewId, active) {
       return undefined;
     }
     const stop = subscribeToInterviewVisuals(interviewId, (event) => {
-      if (event.type === "visual.remove") console.info(`[visual] remove ${event.visualId}`);
-      else if (event.type === "visual.snapshot") console.info(`[visual] snapshot: ${event.visuals?.length ?? 0} on screen`);
-      else console.info(`[visual] ${event.type.slice(7)} ${event.visual?.id} "${event.visual?.title}"`);
+      if (event.type === "visual.remove") console.info(`[slide] remove ${event.visualId}`);
+      else if (event.type === "visual.snapshot") console.info(`[slide] snapshot: ${event.visuals?.length ?? 0} slide(s)`);
+      else console.info(`[slide] ${event.type.slice(7)} ${event.visual?.id} "${event.visual?.title}"`);
       dispatch(event);
     });
     return () => {
@@ -33,16 +29,10 @@ export function useInterviewVisuals(interviewId, active) {
     };
   }, [interviewId, active]);
 
-  const all = useMemo(() => orderedVisuals(byId), [byId]);
-  const visible = useMemo(
-    () => all.filter((v) => !hidden.has(v.id) || hidden.get(v.id) !== v.version),
-    [all, hidden],
-  );
+  const slide = pickSlide(byId, currentSlideId, showingId);
+  // Remember what's showing, for when the voice moves to a slide whose code
+  // hasn't arrived yet (React's "store information from previous renders").
+  if ((slide?.id ?? null) !== showingId) setShowingId(slide?.id ?? null);
 
-  const hide = useCallback((visual) => {
-    setHidden((prev) => new Map(prev).set(visual.id, visual.version));
-  }, []);
-  const showHidden = useCallback(() => setHidden(new Map()), []);
-
-  return { visuals: visible, hiddenCount: all.length - visible.length, hide, showHidden };
+  return { slide };
 }

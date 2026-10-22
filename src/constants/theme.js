@@ -4,14 +4,17 @@
 // AppShell, LoginPage, SignupPage) — everything nested just references
 // var(--ink) etc. and inherits the right value for the current theme.
 //
-// Brand: Cuecast. Caveat (handwritten) for headings/brand voice, Inter for
-// everything else. JetBrains Mono stays for actual code (CodingPanel,
-// timers) — that's a functional monospace need, not a brand typeface.
+// Brand: Cuecast. Caveat (handwritten) ONLY for the brand itself — the
+// "Cuecast" wordmark and the landing hero headline (`brand`). Everything
+// else is Geist: body text (set globally in index.css) and headings/numbers
+// (`disp`). JetBrains Mono stays for actual code (CodingPanel, timers) —
+// that's a functional monospace need, not a brand typeface.
 
 export const FONT_LINK =
-  "https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap";
+  "https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap";
 
-export const disp = { fontFamily: "'Caveat', cursive" };
+export const brand = { fontFamily: "'Caveat', cursive" };
+export const disp = { fontFamily: "'Geist', sans-serif", letterSpacing: "-0.02em" };
 export const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
 // The single accent color the whole design system hangs off — see
