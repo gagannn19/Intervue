@@ -1,5 +1,13 @@
 import { API_URL, getIdToken } from "../lib/apiClient";
 
+// The stream must NOT go through a proxy that buffers responses. In
+// production VITE_API_URL is a Firebase Hosting rewrite
+// (cuecast-backend.cuecast.ai), which holds a response until it ends (and
+// cuts it at 60s) — so the browser never saw a slide. VITE_STREAM_URL
+// points this one stream straight at the backend's Cloud Run URL (CORS
+// allows the app's origin); unset, it uses VITE_API_URL (local dev).
+const STREAM_URL = import.meta.env.VITE_STREAM_URL || API_URL;
+
 // ---------------------------------------------------------------------------
 // Server-Sent Events from the backend carrying the AI interviewer's visual
 // explanations during a live call (GET /interviews/:id/visuals/stream).
@@ -49,7 +57,7 @@ export function subscribeToInterviewVisuals(interviewId, onEvent) {
     while (!stopped) {
       try {
         const token = await getIdToken();
-        const res = await fetch(`${API_URL}/interviews/${interviewId}/visuals/stream`, {
+        const res = await fetch(`${STREAM_URL}/interviews/${interviewId}/visuals/stream`, {
           headers: { Accept: "text/event-stream", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           cache: "no-store",
           signal: controller.signal,
