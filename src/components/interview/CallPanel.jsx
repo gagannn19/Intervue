@@ -28,7 +28,9 @@ const TURN_COPY = {
 const MUTED_COPY = "Your mic is muted — unmute it when you're ready to answer.";
 const CANDIDATE_STATES = ["listening", "user_speaking", "user_finished"];
 
-export function CallPanel({ status, error, turnState, micOn = true, audioBlocked, onUnblockAudio }) {
+// `compact`: a visual fills the column above, so this is just one status
+// line under it instead of taking the remaining space.
+export function CallPanel({ status, error, turnState, micOn = true, audioBlocked, onUnblockAudio, compact = false }) {
   if (status === "error") {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
@@ -41,7 +43,7 @@ export function CallPanel({ status, error, turnState, micOn = true, audioBlocked
   const copy = STATUS_COPY[status];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
+    <div className={`flex flex-col items-center justify-center gap-4 px-6 text-center ${compact ? "py-3" : "flex-1"}`}>
       {copy ? (
         <>
           <Loader2 size={24} className="animate-spin text-white/40" />

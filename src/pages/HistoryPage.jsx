@@ -4,7 +4,7 @@ import { disp } from "../constants/theme";
 
 export function HistoryPage({ history, onOpen = () => {} }) {
   return (
-    <div className="p-6 sm:p-10 max-w-5xl">
+    <div className="p-6 sm:p-10 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>Interview history</h1>
       <p className="text-sm text-[var(--ink)]/50 mt-1 mb-6">{history.length} interview{history.length !== 1 && "s"} completed</p>
       <Card className="divide-y divide-[var(--ink)]/6">

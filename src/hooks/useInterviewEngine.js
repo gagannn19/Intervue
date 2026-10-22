@@ -3,6 +3,7 @@ import Daily from "@daily-co/daily-js";
 import { QUESTION_BANK, STARTER_CODE } from "../constants/questions";
 import { getQuestions, generateQuestions } from "../services/interviewQuestionService";
 import { startInterview } from "../services/interviewService";
+import { EMPTY_CAPTIONS, applyCaption, applyTurnState } from "./captionState";
 
 // ---------------------------------------------------------------------------
 // useInterviewEngine — real-time voice interview room.
@@ -31,6 +32,15 @@ import { startInterview } from "../services/interviewService";
 // Mic button: a plain mute/unmute on top of that — muted = never published,
 // and the bot is told ({type: "cuecast-mic", muted}) so it ignores speech.
 //
+// Slides: the interviewer presents on slides. The bot sends
+// {type: "cuecast-slide", slideId} as each spoken segment starts playing
+// (queued behind the audio, so it lands in step with the voice); that id
+// is the visual to show now — see useInterviewVisuals.
+//
+// Subtitles: the bot sends {type: "cuecast-caption", role, text, final?} —
+// the interviewer's words as each is played, and what it heard from the
+// candidate — kept as `captions` (see captionState.js).
+//
 // Ending: the End button and the timer reaching 00:00 both call
 // finishInterview() -> onEnd -> the backend's single end-interview path
 // (POST /interviews/:id/report). The backend also enforces the time limit
@@ -47,6 +57,8 @@ import { startInterview } from "../services/interviewService";
 const TURN_MESSAGE = "cuecast-turn";
 const STATE_MESSAGE = "cuecast-state";
 const MIC_MESSAGE = "cuecast-mic";
+const SLIDE_MESSAGE = "cuecast-slide";
+const CAPTION_MESSAGE = "cuecast-caption";
 const BOT_USER_NAME = "Cuecast AI";
 // Bot states in which the (unmuted) mic is published: every state the bot
 // reports — including the interviewer's own turn, for barge-in.
@@ -85,6 +97,9 @@ export function useInterviewEngine(config, onEnd) {
   // "ai_finished" | "listening" | "user_speaking" | "user_finished" |
   // "processing".
   const [turnState, setTurnState] = useState("waiting");
+  // The slide the interviewer's voice is on (see "Slides" above).
+  const [currentSlideId, setCurrentSlideId] = useState(null);
+  const [captions, setCaptions] = useState(EMPTY_CAPTIONS);
   // Read inside Daily event handlers, which are registered once.
   const turnStateRef = useRef("waiting");
   // Candidate's own mute toggle (true = not muted by the candidate).
@@ -122,6 +137,8 @@ export function useInterviewEngine(config, onEnd) {
   // mode, it only fires track-started and leaves playback entirely to us.
   // This element is what actually makes the bot's voice audible.
   const remoteAudioRef = useRef(null);
+  // The bot's voice track, for the audio-reactive interviewer orb.
+  const [botAudioTrack, setBotAudioTrack] = useState(null);
 
   // --- countdown timer ---
   useEffect(() => {
@@ -193,6 +210,7 @@ export function useInterviewEngine(config, onEnd) {
             // over WebRTC but has nowhere to play — dead silence with no
             // error anywhere, since nothing actually failed.
             if (!ev.participant?.local && ev.type === "audio") {
+              setBotAudioTrack(ev.track);
               const audioEl = remoteAudioRef.current ?? document.createElement("audio");
               audioEl.autoplay = true;
               audioEl.srcObject = new MediaStream([ev.track]);
@@ -204,12 +222,21 @@ export function useInterviewEngine(config, onEnd) {
             }
           })
           .on("app-message", (ev) => {
+            if (ev?.data?.type === SLIDE_MESSAGE && typeof ev.data.slideId === "string") {
+              setCurrentSlideId(ev.data.slideId);
+              return;
+            }
+            if (ev?.data?.type === CAPTION_MESSAGE) {
+              setCaptions((c) => applyCaption(c, ev.data));
+              return;
+            }
             if (ev?.data?.type !== STATE_MESSAGE || typeof ev.data.state !== "string") return;
             // Mic follows the bot's state (live once the bot reports one)
             // and the mute button.
             turnStateRef.current = ev.data.state;
             applyMic(call);
             setTurnState(ev.data.state);
+            setCaptions((c) => applyTurnState(c, ev.data.state));
           })
           .on("participant-joined", (ev) => {
             if (ev?.participant?.user_name === BOT_USER_NAME) {
@@ -221,6 +248,7 @@ export function useInterviewEngine(config, onEnd) {
               turnStateRef.current = "waiting";
               applyMic(call);
               setTurnState("waiting");
+              setCaptions(EMPTY_CAPTIONS);
             }
           })
           .on("left-meeting", () =>
@@ -372,6 +400,9 @@ export function useInterviewEngine(config, onEnd) {
     callError,
     aiSpeaking: turnState === "ai_speaking",
     turnState,
+    currentSlideId,
+    captions,
+    botAudioTrack,
     micOn,
     toggleMic,
     sessionId,

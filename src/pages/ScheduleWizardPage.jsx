@@ -36,6 +36,8 @@ const STEP_LABELS = [
   "Review",
 ];
 const LAST_STEP = STEP_LABELS.length - 1;
+// Skipped in quick start, which schedules the interview for "now".
+const SCHEDULE_STEP = STEP_LABELS.indexOf("Schedule");
 
 const DEFAULT_FORM = {
   interviewTypes: ["dsa"], // slugs; only DSA is live, matches INTERVIEW_TYPES
@@ -60,9 +62,10 @@ const DEFAULT_FORM = {
 //   onConfirm -> async ({ difficulty, duration, date, time, role,
 //                instructions, type, company, position, salaryMin,
 //                salaryMax }); navigates away on success
-//   dark      -> current theme, for the native date/time pickers
+//   quickStart -> skip the date/time step; onConfirm schedules for now
+//                 and starts the interview
 // ---------------------------------------------------------------------------
-export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
+export function ScheduleWizardPage({ onBack, onConfirm, quickStart = false }) {
   const [mode, setMode] = useState("wizard"); // "wizard" | "custom"
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -87,7 +90,7 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
   if (mode === "custom") {
     return (
       <SchedulePage
-        dark={dark}
+        quickStart={quickStart}
         onBack={() => {
           setMode("wizard");
           setStep(1);
@@ -109,12 +112,12 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
       onBack();
       return;
     }
-    setStep((s) => s - 1);
+    setStep((s) => (quickStart && s - 1 === SCHEDULE_STEP ? s - 2 : s - 1));
   };
 
   const goNext = () => {
     setError(null);
-    setStep((s) => Math.min(s + 1, LAST_STEP));
+    setStep((s) => Math.min(quickStart && s + 1 === SCHEDULE_STEP ? s + 2 : s + 1, LAST_STEP));
   };
 
   const canContinue = [
@@ -157,7 +160,7 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
   };
 
   return (
-    <div className="p-6 sm:p-10 max-w-2xl">
+    <div className="p-6 sm:p-10 max-w-2xl mx-auto">
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-sm text-[var(--ink)]/50 mb-6 hover:text-[var(--ink)]"
@@ -165,13 +168,20 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
         <ArrowLeft size={15} /> Back
       </button>
 
-      <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>Schedule an interview</h1>
+      <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>
+        {quickStart ? "Quick start" : "Schedule an interview"}
+      </h1>
       <p className="text-sm text-[var(--ink)]/50 mt-1 mb-8">
-        Target a company step by step — or switch to custom settings.
+        {quickStart
+          ? "Pick what to practice — the interview starts as soon as you're done."
+          : "Target a company step by step — or switch to custom settings."}
       </p>
 
       <Card className="p-6 space-y-6">
-        <WizardProgress steps={STEP_LABELS} current={step} />
+        <WizardProgress
+          steps={quickStart ? STEP_LABELS.filter((_, i) => i !== SCHEDULE_STEP) : STEP_LABELS}
+          current={quickStart && step > SCHEDULE_STEP ? step - 1 : step}
+        />
 
         {step === 0 && (
           <div>
@@ -237,7 +247,6 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
 
         {step === 6 && (
           <WhenStep
-            dark={dark}
             date={form.date}
             onDateChange={(v) => update({ date: v })}
             time={form.time}
@@ -255,6 +264,7 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
             duration={form.duration}
             date={form.date}
             time={form.time}
+            startsNow={quickStart}
             loading={positionLoading}
           />
         )}
@@ -271,7 +281,7 @@ export function ScheduleWizardPage({ onBack, onConfirm, dark }) {
               {submitting ? (
                 <Loader2 size={15} className="animate-spin" />
               ) : (
-                <>Schedule Interview <ChevronRight size={15} /></>
+                <>{quickStart ? "Start interview" : "Schedule Interview"} <ChevronRight size={15} /></>
               )}
             </GradientButton>
           ) : (

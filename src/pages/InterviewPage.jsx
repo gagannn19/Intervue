@@ -9,6 +9,7 @@ import { InterviewControls } from "../components/interview/InterviewControls";
 import { TurnIndicator } from "../components/interview/TurnIndicator";
 import { SessionNotes } from "../components/interview/SessionNotes";
 import { VisualPanel } from "../components/interview/VisualPanel";
+import { CaptionBar } from "../components/interview/CaptionBar";
 import { PulseAvatar } from "../components/ui/PulseAvatar";
 import { GradientButton } from "../components/ui/GradientButton";
 import { disp } from "../constants/theme";
@@ -19,11 +20,13 @@ export function InterviewPage({ config, onEnd }) {
   const engine = useInterviewEngine(config, onEnd);
   // The interviewer's optional visual explanations (SSE, separate from the
   // call audio) — only while the call is live.
-  const visuals = useInterviewVisuals(config.id, engine.callStatus === "live");
+  const visuals = useInterviewVisuals(config.id, engine.callStatus === "live", engine.currentSlideId);
+
+  const coding = engine.tab === "code";
 
   if (engine.questionsLoading) {
     return (
-      <div className="min-h-screen bg-[#0D0D1F] text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <PulseAvatar size={64} speaking label />
         <p className="text-sm text-white/60" style={disp}>Generating your interview…</p>
       </div>
@@ -32,7 +35,7 @@ export function InterviewPage({ config, onEnd }) {
 
   if (engine.questionsError) {
     return (
-      <div className="min-h-screen bg-[#0D0D1F] text-white flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4 px-6 text-center">
         <PulseAvatar size={56} />
         <p className="text-sm font-semibold" style={disp}>Couldn't start the AI interview</p>
         <p className="text-sm text-white/50 max-w-sm">{engine.questionsError}</p>
@@ -42,42 +45,47 @@ export function InterviewPage({ config, onEnd }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D1F] text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       <InterviewHeader
-        questionTitle={engine.question.title}
-        difficulty={config.difficulty}
         timeLabel={engine.timeLabel}
         company={config.company}
         position={config.position}
         type={config.type}
       />
 
-      <div className="flex-1 grid lg:grid-cols-[1fr_400px] min-h-0">
+      {/* With the code editor open it takes the middle column, beside the
+          slide; the camera/controls column narrows a little. */}
+      <div
+        className={`flex-1 grid min-h-0 ${
+          coding ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]" : "lg:grid-cols-[minmax(0,1fr)_400px]"
+        }`}
+      >
         <div className="flex flex-col min-h-0 border-r border-white/10">
           <AIInterviewerPanel
             speaking={engine.aiSpeaking}
             turnState={engine.turnState}
+            audioTrack={engine.botAudioTrack}
             tab={engine.tab}
             onTabChange={engine.setTab}
           />
 
-          <VisualPanel
-            visuals={visuals.visuals}
-            hiddenCount={visuals.hiddenCount}
-            onHide={visuals.hide}
-            onShowHidden={visuals.showHidden}
+          <VisualPanel slide={visuals.slide} />
+
+          <CallPanel
+            status={engine.callStatus}
+            error={engine.callError}
+            turnState={engine.turnState}
+            micOn={engine.micOn}
+            audioBlocked={engine.audioBlocked}
+            onUnblockAudio={engine.unblockAudio}
+            compact={Boolean(visuals.slide)}
           />
 
-          {engine.tab === "call" ? (
-            <CallPanel
-              status={engine.callStatus}
-              error={engine.callError}
-              turnState={engine.turnState}
-              micOn={engine.micOn}
-              audioBlocked={engine.audioBlocked}
-              onUnblockAudio={engine.unblockAudio}
-            />
-          ) : (
+          {engine.callStatus === "live" && <CaptionBar captions={engine.captions} />}
+        </div>
+
+        {coding && (
+          <div className="flex flex-col min-h-0 min-w-0 border-r border-white/10">
             <CodingPanel
               statement={engine.question.statement}
               lang={engine.lang}
@@ -88,8 +96,8 @@ export function InterviewPage({ config, onEnd }) {
               running={engine.running}
               output={engine.output}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="flex flex-col p-5 gap-4">
           <UserVideoPanel camOn={engine.camOn} videoRef={engine.videoRef} mediaError={engine.mediaError} />

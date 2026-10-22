@@ -43,6 +43,7 @@ export function ReviewStep({
   duration,
   date,
   time,
+  startsNow = false,
   loading = false,
 }) {
   const typeLabels = interviewTypeIds
@@ -64,8 +65,14 @@ export function ReviewStep({
           <span style={disp}>{loading ? "…" : formatSalaryRange(salaryRange)}</span>
         </Row>
         <Row label="Duration">{duration} minutes</Row>
-        <Row label="Date">{prettyDate(date)}</Row>
-        <Row label="Time">{prettyTime(time)}</Row>
+        {startsNow ? (
+          <Row label="Starts">Right away</Row>
+        ) : (
+          <>
+            <Row label="Date">{prettyDate(date)}</Row>
+            <Row label="Time">{prettyTime(time)}</Row>
+          </>
+        )}
       </div>
 
       <p className="text-[11px] text-[var(--ink)]/45 mt-2">

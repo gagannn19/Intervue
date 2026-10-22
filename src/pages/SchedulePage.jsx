@@ -7,7 +7,7 @@ import { DifficultyDurationSelector } from "../components/schedule/DifficultyDur
 import { ScheduleDetailsForm } from "../components/schedule/ScheduleDetailsForm";
 import { disp } from "../constants/theme";
 
-export function SchedulePage({ onBack, onConfirm, dark }) {
+export function SchedulePage({ onBack, onConfirm, quickStart = false }) {
   const [type, setType] = useState("dsa");
   const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(30);
@@ -17,7 +17,7 @@ export function SchedulePage({ onBack, onConfirm, dark }) {
   const [instructions, setInstructions] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const canConfirm = date && time && !submitting;
+  const canConfirm = (quickStart || (date && time)) && !submitting;
 
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -32,12 +32,14 @@ export function SchedulePage({ onBack, onConfirm, dark }) {
   };
 
   return (
-    <div className="p-6 sm:p-10 max-w-2xl">
+    <div className="p-6 sm:p-10 max-w-2xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-[var(--ink)]/50 mb-6 hover:text-[var(--ink)]">
         <ArrowLeft size={15} /> Back
       </button>
-      <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>Schedule an interview</h1>
-      <p className="text-sm text-[var(--ink)]/50 mt-1 mb-8">Set it up the way you want to be tested.</p>
+      <h1 className="text-2xl font-bold text-[var(--ink)]" style={disp}>{quickStart ? "Quick start" : "Schedule an interview"}</h1>
+      <p className="text-sm text-[var(--ink)]/50 mt-1 mb-8">
+        {quickStart ? "Set it up — the interview starts as soon as you confirm." : "Set it up the way you want to be tested."}
+      </p>
 
       <Card className="p-6 space-y-6">
         <InterviewTypeSelector value={type} onChange={setType} />
@@ -48,7 +50,7 @@ export function SchedulePage({ onBack, onConfirm, dark }) {
           onDurationChange={setDuration}
         />
         <ScheduleDetailsForm
-          dark={dark}
+          showDateTime={!quickStart}
           date={date} onDateChange={setDate}
           time={time} onTimeChange={setTime}
           role={role} onRoleChange={setRole}
@@ -58,7 +60,7 @@ export function SchedulePage({ onBack, onConfirm, dark }) {
         {error && <p className="text-[13px] text-[#E24468]">{error}</p>}
 
         <GradientButton className="w-full py-3" disabled={!canConfirm} onClick={handleConfirm}>
-          {submitting ? <Loader2 size={15} className="animate-spin" /> : <>Confirm interview <ChevronRight size={15} /></>}
+          {submitting ? <Loader2 size={15} className="animate-spin" /> : <>{quickStart ? "Start interview" : "Confirm interview"} <ChevronRight size={15} /></>}
         </GradientButton>
       </Card>
     </div>

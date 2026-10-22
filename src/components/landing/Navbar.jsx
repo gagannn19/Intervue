@@ -1,16 +1,16 @@
 import { GhostButton } from "../ui/GhostButton";
 import { GradientButton } from "../ui/GradientButton";
 import { ThemeToggle } from "../ui/ThemeToggle";
-import { disp } from "../../constants/theme";
+import { brand } from "../../constants/theme";
 
 export function Navbar({ onSchedule, onLogin, dark, onToggleDark }) {
   return (
     <header className="max-w-7xl mx-auto flex items-center justify-between px-6 py-5 gap-4">
       <div className="flex items-center gap-3 shrink-0">
         <img src="/brand/logo-mark.png" alt="" className="w-8 h-8" />
-        <span className="font-semibold text-2xl text-[var(--ink)]" style={disp}>Cuecast</span>
+        <span className="font-semibold text-2xl text-[var(--ink)]" style={brand}>Cuecast</span>
         <span className="hidden sm:block h-8 w-px bg-[var(--ink)]/12 mx-1" />
-        <span className="hidden sm:flex flex-col leading-[1.05] text-[10px] tracking-wide text-[var(--ink)]/45 italic" style={disp}>
+        <span className="hidden sm:flex flex-col leading-[1.05] text-[10px] tracking-wide text-[var(--ink)]/45 italic" style={brand}>
           <span>Practice</span>
           <span>Solve</span>
           <span>Grow</span>

@@ -64,9 +64,11 @@ Flow:
 6. **Ending.** The End button and the timer reaching 00:00 both call `finishInterview(reason)` (runs once: mic off, `call.leave()`, `callStatus` "finishing") -> `App.jsx`'s `handleEndInterview` (also guarded) -> `POST /interviews/:id/report` (the backend's single end-interview path) -> result page. The backend enforces the time limit on its own too, so a closed tab still ends on time; a reload after the deadline doesn't rejoin, it ends straight away.
 6. Ending the call: `call.leave()`, then the existing report flow (`App.jsx`'s `handleEndInterview` → `generateReport`) runs unchanged — the backend now finalizes any trailing evaluation server-side (see `intervue-backend`'s CLAUDE.md), so `finalizeEvaluation` here is a no-op.
 
-**Visual explanations (SSE).** The one backend→frontend channel during the call. The AI controls which visuals are on screen — any number, by stable id (usually one). `useInterviewVisuals(config.id, callStatus === "live")` reads `GET /interviews/:id/visuals/stream` via `services/interviewVisualService.js` (fetch + stream parsing, NOT EventSource — it can't send the Firebase `Authorization` header; reconnects with backoff) and applies lifecycle events with the pure reducer `hooks/visualState.js` (tested: `npm test`, `node --test`): `visual.snapshot` (replace all — sent on every (re)connect), `visual.create`, `visual.update` (same id, newer `version`), `visual.remove` (that id only). State is a map by id, never a single "current visual"; nothing waits on the user. The X button only HIDES a visual locally ("Show N hidden" restores; an AI update shows it again) — it never changes interview state. `components/interview/VisualPanel.jsx` stacks the cards (scrolls past ~45vh) and renders each ONLY inside `<iframe sandbox="allow-scripts" srcDoc>` keyed by id+version (no allow-same-origin → opaque origin: no cookies/storage/parent DOM/navigation/popups), document built by `lib/visualDocument.js` (CSP with no network, app-owned dark design tokens `--fg --muted --accent --accent-2 --panel --border`, JS timers stopped after 60s). Renders nothing when there are none. The voice never comes through this channel — it's Daily audio as always.
+**Slides (SSE + Daily app-messages).** The interviewer presents on slides: each spoken segment can come with a visual, shown full-screen in the room's main column while that segment plays. `useInterviewVisuals(config.id, callStatus === "live", engine.currentSlideId)` reads `GET /interviews/:id/visuals/stream` via `services/interviewVisualService.js` (fetch + stream parsing, NOT EventSource — it can't send the Firebase `Authorization` header; reconnects with backoff) into a map by id with the pure reducer `hooks/visualState.js` (`visual.snapshot` on every (re)connect / `visual.create` / `visual.remove`; tested: `npm test`). The backend sends each slide as soon as its code is ready — often before its turn — and the bot says which one the voice is on: Daily app-message `{type: "cuecast-slide", slideId}`, sent as that segment's audio starts (`useInterviewEngine` -> `currentSlideId`). `pickSlide` shows that slide once it has arrived; until then the one already showing; failing that (fresh connection / an older bot) the oldest. `components/interview/VisualPanel.jsx` renders the ONE slide, filling the column (`CallPanel` shrinks to a status line, `compact`), ONLY inside `<iframe sandbox="allow-scripts" srcDoc>` keyed by id+version (no allow-same-origin → opaque origin: no cookies/storage/parent DOM/navigation/popups), document built by `lib/visualDocument.js` (CSP with no network, app-owned dark design tokens, scales the slide up to fit the frame, JS timers stopped after 60s). Renders nothing when there's no slide. The voice never comes through this channel — it's Daily audio as always.
 
-**Known limitation (first pass, intentional for now):** no live captions —
+**Subtitles.** The bot sends Daily app-messages `{type: "cuecast-caption", role: "interviewer" | "candidate", text, final?}`: the interviewer's words one at a time as each is PLAYED, and what it heard from the candidate this turn (live, replaced each time). `useInterviewEngine` folds them into `captions` with the pure `hooks/captionState.js` (tested: `npm test`) — the interviewer shown a sentence at a time; each side's line cleared when the other takes the floor — and `components/interview/CaptionBar.jsx` shows them at the bottom of the main column while the call is live.
+
+**Known limitation (first pass, intentional for now):** no live transcript panel —
 the coding panel always shows the interview's main problem rather than
 tracking which question the server-side conversation has actually
 advanced to — the visual SSE channel above could carry that later, but
@@ -77,6 +79,25 @@ backwards compat): `Transcript.jsx`, `AnswerInput.jsx`,
 `interviewConversationService.js` (typed-chat REST turn flow), and
 `aiService.js` (browser `speechSynthesis` mock TTS — real TTS is
 ElevenLabs, via the pipecat bot, now).
+
+## Sign-in allowlist
+
+`intervue-backend` can optionally restrict sign-in to a specific list of
+emails (`ALLOWED_EMAILS`, see that repo's `CLAUDE.md`) — but Firebase Auth
+itself has no such allowlist, so `signInWithPopup`/`signInWithEmailAndPassword`
+still succeed client-side even for a non-allowlisted account. `AuthContext.jsx`'s
+`verifyBackendAccess()` closes that gap: right after every sign-in/signup
+(before `setUser` runs), it calls `GET /auth/me` with the fresh ID token;
+on a 403 (or any other failure) it signs the Firebase session back out
+and rethrows, so `LoginPage.jsx`/`SignupPage.jsx`'s existing `catch (err)
+{ setError(err.message) }` surfaces the backend's rejection message with
+no new UI needed. Known minor gap: Firebase's own `onAuthStateChanged`
+listener (which drives `auth.user` on page load / token refresh) can
+briefly reflect the still-valid Firebase session before this check signs
+it back out — no real data is exposed in that window since every
+`intervue-backend` API call requires the same token and 403s identically,
+but a flash of the logged-in shell before bouncing to the login screen is
+possible. Revisit if that flash becomes worth eliminating.
 
 ## Environment variables
 

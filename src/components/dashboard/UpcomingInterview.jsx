@@ -4,7 +4,7 @@ import { GradientButton } from "../ui/GradientButton";
 import { GhostButton } from "../ui/GhostButton";
 import { Skeleton } from "../ui/Skeleton";
 
-export function UpcomingInterview({ upcoming, loading, onSchedule, onJoin }) {
+export function UpcomingInterview({ upcoming, loading, onQuickStart, onJoin }) {
   if (loading) {
     return (
       <Card className="p-5 mb-6 flex items-center gap-4">
@@ -41,7 +41,7 @@ export function UpcomingInterview({ upcoming, loading, onSchedule, onJoin }) {
         <p className="font-semibold text-sm text-[var(--ink)]">No upcoming interview</p>
         <p className="text-xs text-[var(--ink)]/50 mt-1">Schedule one, or jump straight into a quick-start round.</p>
       </div>
-      <GhostButton onClick={onSchedule}>Quick start <Zap size={14} /></GhostButton>
+      <GhostButton onClick={onQuickStart}>Quick start <Zap size={14} /></GhostButton>
     </Card>
   );
 }

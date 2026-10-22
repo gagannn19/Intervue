@@ -6,6 +6,7 @@ import { useInterviews } from "./hooks/useInterviews";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import * as interviewService from "./services/interviewService";
 import { mapInterviewRecord } from "./utils/mapInterview";
+import { toISODate, toHHMM } from "./utils/dateTime";
 
 import { AuthLoadingScreen } from "./components/auth/AuthLoadingScreen";
 import { AppShell } from "./components/layout/AppShell";
@@ -50,6 +51,16 @@ export default function App() {
     await interviewService.scheduleInterview(formValues);
     await interviews.refresh();
     nav.backFromSchedule();
+  };
+
+  // Quick start: same form values minus date/time — schedule it for right
+  // now, then start and enter the room exactly like "Join now" does.
+  const handleQuickStart = async (formValues) => {
+    const now = new Date();
+    const scheduled = await interviewService.scheduleInterview({ ...formValues, date: toISODate(now), time: toHHMM(now) });
+    const started = await interviewService.startInterview(scheduled.id);
+    await interviews.refresh();
+    nav.joinInterview(mapInterviewRecord(started));
   };
 
   // "Join now": tell the backend this interview has started (source of
@@ -154,7 +165,11 @@ export default function App() {
       onToggleDark={toggleDark}
     >
       {nav.screen === "schedule" && (
-        <ScheduleWizardPage onBack={nav.backFromSchedule} onConfirm={handleConfirmSchedule} dark={dark} />
+        <ScheduleWizardPage
+          quickStart={nav.quickStart}
+          onBack={nav.backFromSchedule}
+          onConfirm={nav.quickStart ? handleQuickStart : handleConfirmSchedule}
+        />
       )}
       {nav.screen === "feedback" && nav.lastSession && (
         <FeedbackPage session={nav.lastSession} onBackToDashboard={() => nav.setScreen("dashboard")} onHistory={() => nav.setScreen("history")} />
@@ -168,7 +183,8 @@ export default function App() {
           history={interviews.history}
           upcoming={interviews.upcoming}
           loading={interviews.loading}
-          onSchedule={() => nav.setScreen("schedule")}
+          onSchedule={nav.goToSchedule}
+          onQuickStart={nav.goToQuickStart}
           onJoin={handleStartInterview}
           onViewHistory={() => nav.setScreen("history")}
         />

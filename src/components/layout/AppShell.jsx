@@ -1,6 +1,6 @@
 import { LayoutDashboard, History, LogOut } from "lucide-react";
 import { ThemeToggle } from "../ui/ThemeToggle";
-import { disp, themeVars } from "../../constants/theme";
+import { brand, themeVars } from "../../constants/theme";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,13 +15,13 @@ export function AppShell({ active, onNav, onLogout, dark, onToggleDark, children
   return (
     <div
       className="min-h-screen bg-[var(--bg)] flex transition-colors duration-300"
-      style={{ ...themeVars(dark), fontFamily: "'Inter', sans-serif" }}
+      style={{ ...themeVars(dark) }}
     >
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-[var(--ink)]/8 bg-[var(--surface)] p-5 transition-colors duration-300">
         <div className="flex items-center justify-between px-1 mb-8">
           <div className="flex items-center gap-2">
             <img src="/brand/logo-mark.png" alt="" className="w-7 h-7" />
-            <span className="font-semibold text-xl text-[var(--ink)]" style={disp}>Cuecast</span>
+            <span className="font-semibold text-xl text-[var(--ink)]" style={brand}>Cuecast</span>
           </div>
           <ThemeToggle dark={dark} onToggle={onToggleDark} size="sm" />
         </div>
