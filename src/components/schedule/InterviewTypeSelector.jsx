@@ -33,7 +33,7 @@ export function InterviewTypeSelector({ value, onChange, multiple = false, types
 
   const handleClick = (type) => {
     if (!type.live) {
-      setNotice(`${type.label} interviews aren't available yet — DSA is the only live interview type right now.`);
+      setNotice(`${type.label} interviews aren't available yet.`);
       return;
     }
     setNotice(null);
