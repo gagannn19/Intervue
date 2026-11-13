@@ -4,12 +4,15 @@ import { useTheme } from "./hooks/useTheme";
 import { useAuth } from "./context/AuthContext";
 import { useInterviews } from "./hooks/useInterviews";
 import { useAppNavigation } from "./hooks/useAppNavigation";
+import { useInterviewAccess } from "./hooks/useInterviewAccess";
 import * as interviewService from "./services/interviewService";
+import { INTERVIEW_ACCESS_REQUIRED } from "./services/interviewAccessService";
 import { mapInterviewRecord } from "./utils/mapInterview";
 import { toISODate, toHHMM } from "./utils/dateTime";
 
 import { AuthLoadingScreen } from "./components/auth/AuthLoadingScreen";
 import { AppShell } from "./components/layout/AppShell";
+import { InterviewAccessModal } from "./components/dashboard/InterviewAccessModal";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
@@ -29,6 +32,7 @@ export default function App() {
   const auth = useAuth();
   const interviews = useInterviews(auth.user);
   const nav = useAppNavigation(auth.user, auth.loading);
+  const access = useInterviewAccess();
   const [starting, setStarting] = useState(false);
   // One completion per interview, whatever triggers it (End button, timer).
   const endingInterviewRef = useRef(null);
@@ -65,18 +69,34 @@ export default function App() {
 
   // "Join now": tell the backend this interview has started (source of
   // truth for status + startedAt), then enter the room with the real
-  // record — not just local state.
+  // record — not just local state. Only admin-allowed emails may start;
+  // anyone else gets the request-access modal instead. Returns whether
+  // the candidate actually got in.
   const handleStartInterview = async () => {
-    if (!interviews.upcoming || starting) return;
+    if (!interviews.upcoming || starting) return false;
     setStarting(true);
     try {
       const started = await interviewService.startInterview(interviews.upcoming.id);
+      access.close();
       await interviews.refresh();
       nav.joinInterview(mapInterviewRecord(started));
+      return true;
+    } catch (err) {
+      if (err.code !== INTERVIEW_ACCESS_REQUIRED) throw err;
+      await access.prompt();
+      return false;
     } finally {
       setStarting(false);
     }
   };
+
+  // The modal's "Check again" (request still pending): try to join again.
+  const handleRetryAccess = () =>
+    access.retry(async () => {
+      if (!(await handleStartInterview())) {
+        access.setError("Still waiting for an admin to approve your request.");
+      }
+    });
 
   // "End Interview" — the End button AND the timer reaching 00:00 (see
   // useInterviewEngine's finishInterview). Phase 3.5: the visible result is the backend's
@@ -187,6 +207,17 @@ export default function App() {
           onQuickStart={nav.goToQuickStart}
           onJoin={handleStartInterview}
           onViewHistory={() => nav.setScreen("history")}
+        />
+      )}
+      {access.status && auth.user && (
+        <InterviewAccessModal
+          status={access.status}
+          email={auth.user.email}
+          busy={access.busy}
+          error={access.error}
+          onRequest={access.request}
+          onRetry={handleRetryAccess}
+          onClose={access.close}
         />
       )}
     </AppShell>
