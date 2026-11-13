@@ -1,8 +1,9 @@
 import { InterviewerOrb } from "./InterviewerOrb";
 import { useAudioAnalyser } from "../../hooks/useAudioAnalyser";
 
-// Header strip for the left column: avatar + status text + the
-// call/code tab switcher.
+// Header strip for the left column: avatar + status text + the tab
+// switcher between the call and the workspace — the code editor (DSA) or
+// the whiteboard (system design), named by `workspaceLabel`.
 const TURN_STATUS = {
   waiting: "connecting…",
   ai_speaking: "speaking…",
@@ -14,7 +15,7 @@ const TURN_STATUS = {
   ended: "interview ended",
 };
 
-export function AIInterviewerPanel({ speaking, turnState, audioTrack, tab, onTabChange }) {
+export function AIInterviewerPanel({ speaking, turnState, audioTrack, tab, onTabChange, workspaceLabel = "Code editor" }) {
   const status = TURN_STATUS[turnState] ?? (speaking ? "speaking…" : "listening");
   const analyserRef = useAudioAnalyser(audioTrack);
   return (
@@ -31,7 +32,7 @@ export function AIInterviewerPanel({ speaking, turnState, audioTrack, tab, onTab
           Call
         </button>
         <button onClick={() => onTabChange("code")} className={`px-3 py-1.5 rounded-md text-xs font-semibold ${tab === "code" ? "bg-white/15" : "text-white/50"}`}>
-          Code editor
+          {workspaceLabel}
         </button>
       </div>
     </div>

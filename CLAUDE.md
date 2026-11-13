@@ -68,6 +68,8 @@ Flow:
 
 **Subtitles.** The bot sends Daily app-messages `{type: "cuecast-caption", role: "interviewer" | "candidate", text, final?}`: the interviewer's words one at a time as each is PLAYED, and what it heard from the candidate this turn (live, replaced each time). `useInterviewEngine` folds them into `captions` with the pure `hooks/captionState.js` (tested: `npm test`) — the interviewer shown a sentence at a time; each side's line cleared when the other takes the floor — and `components/interview/CaptionBar.jsx` shows them at the bottom of the main column while the call is live.
 
+**System design interviews.** `mapInterviewRecord` carries `typeSlug` (the interview type's slug — `type` is display text only) into the room config. For `typeSlug === "system-design"` the workspace tab is a **Whiteboard** instead of the Code editor (`AIInterviewerPanel`'s `workspaceLabel`): `components/interview/WhiteboardPanel.jsx` (Excalidraw, image upload off) + `hooks/useWhiteboard.js`, which loads the saved board once, autosaves edits 1s after they stop (`services/whiteboardService.js` → `GET`/`PUT /interviews/:id/whiteboard`), and `flush()`es any pending save before the interview ends so the grader sees the final diagram. The one design problem is presented on the interviewer's slides, and the backend runs the interview in stages and reads the board as text each turn (see `intervue-backend`'s CLAUDE.md).
+
 **Known limitation (first pass, intentional for now):** no live transcript panel —
 the coding panel always shows the interview's main problem rather than
 tracking which question the server-side conversation has actually
@@ -98,6 +100,17 @@ it back out — no real data is exposed in that window since every
 `intervue-backend` API call requires the same token and 403s identically,
 but a flash of the logged-in shell before bouncing to the login screen is
 possible. Revisit if that flash becomes worth eliminating.
+
+## Interview access (invite-only)
+
+Only emails an admin allowed (admin app's "Interview Access" page) can
+start an interview. `App.jsx`'s `handleStartInterview` ("Join now")
+catches the backend's 403 `code: "INTERVIEW_ACCESS_REQUIRED"` (`apiClient`
+puts `status`/`code` on thrown errors) and opens
+`components/dashboard/InterviewAccessModal.jsx` (state in
+`hooks/useInterviewAccess.js`, calls in `services/interviewAccessService.js`):
+"Request access" when the candidate never asked, "Check again" (retries the
+join) while the request is pending admin approval.
 
 ## Environment variables
 

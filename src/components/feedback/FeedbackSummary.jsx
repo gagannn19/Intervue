@@ -12,7 +12,12 @@ export function FeedbackSummary({ report }) {
       <div className="flex-1">
         <p className="text-sm text-[var(--ink)]/70 leading-relaxed">{report.summary}</p>
         <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-[11px] text-[var(--ink)]/45">
-          {plannedQuestions > 0 && (
+          {report.design ? (
+            // System design: one problem, progress measured in stages.
+            <span>
+              {report.design.stagesReached} of {report.design.stagesTotal} design stages covered
+            </span>
+          ) : plannedQuestions > 0 && (
             <span>
               {questionsEvaluated} of {questionsReached} question{questionsReached === 1 ? "" : "s"} answered
               {report.endedEarly ? ` · ${plannedQuestions} planned` : ""}

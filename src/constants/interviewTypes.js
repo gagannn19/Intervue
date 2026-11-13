@@ -14,12 +14,12 @@ export const INTERVIEW_TYPE_META = {
   hr: { icon: Users },
 };
 
-// Static fallback — DSA is the only live round for now. Kept in sync with
+// Static fallback — DSA and System Design are live. Kept in sync with
 // the seed (prisma/seed.ts). The wizard prefers the API; this is what the
 // classic SchedulePage renders.
 export const INTERVIEW_TYPES = [
   { id: "dsa", label: "DSA", desc: "Data structures & algorithms", icon: Code2, live: true },
-  { id: "system-design", label: "System Design", desc: "Architecture & scale", icon: LayoutDashboard, live: false },
+  { id: "system-design", label: "System Design", desc: "Architecture & scale", icon: LayoutDashboard, live: true },
   { id: "behavioral", label: "Behavioral", desc: "Situational & story-based", icon: MessageSquare, live: false },
   { id: "frontend", label: "Frontend", desc: "JS, React, CSS internals", icon: Terminal, live: false },
   { id: "hr", label: "HR Round", desc: "Culture fit & expectations", icon: Users, live: false },

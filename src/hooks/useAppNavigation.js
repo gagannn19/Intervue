@@ -57,6 +57,7 @@ export function useAppNavigation(user, authLoading) {
     setActiveConfig({
       id: interview.id,
       type: interview.type || "DSA",
+      typeSlug: interview.typeSlug || "dsa",
       difficulty: interview.difficulty,
       duration: interview.duration,
       role: interview.role,

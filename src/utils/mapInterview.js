@@ -13,6 +13,8 @@ export function mapInterviewRecord(record) {
   return {
     id: record.id,
     type: record.interviewType?.name || "DSA",
+    // Stable id for behaviour (the name above is display text only).
+    typeSlug: record.interviewType?.slug || "dsa",
     difficulty: titleCase(record.difficulty),
     duration: record.duration,
     date: scheduled.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),

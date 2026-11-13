@@ -1,9 +1,12 @@
 import { useInterviewEngine } from "../hooks/useInterviewEngine";
+import { useCallback } from "react";
 import { useInterviewVisuals } from "../hooks/useInterviewVisuals";
+import { useWhiteboard } from "../hooks/useWhiteboard";
 import { InterviewHeader } from "../components/interview/InterviewHeader";
 import { AIInterviewerPanel } from "../components/interview/AIInterviewerPanel";
 import { CallPanel } from "../components/interview/CallPanel";
 import { CodingPanel } from "../components/interview/CodingPanel";
+import { WhiteboardPanel } from "../components/interview/WhiteboardPanel";
 import { UserVideoPanel } from "../components/interview/UserVideoPanel";
 import { InterviewControls } from "../components/interview/InterviewControls";
 import { TurnIndicator } from "../components/interview/TurnIndicator";
@@ -17,12 +20,28 @@ import { disp } from "../constants/theme";
 // Kept intentionally dark regardless of the site's light/dark toggle — a
 // focus-mode call UI, not part of that theme's scope (see project README).
 export function InterviewPage({ config, onEnd }) {
-  const engine = useInterviewEngine(config, onEnd);
+  // A system design interview has no code to write (and no DSA problem to
+  // show): its workspace tab is a whiteboard instead of the code editor.
+  const isSystemDesign = config.typeSlug === "system-design";
+  const whiteboard = useWhiteboard(config.id, isSystemDesign);
+  // Save any pending whiteboard edit before the interview ends (End
+  // button or timer) so the final diagram is what gets graded.
+  const { flush } = whiteboard;
+  const handleEnd = useCallback(
+    async (session) => {
+      await flush().catch(() => {});
+      return onEnd(session);
+    },
+    [flush, onEnd],
+  );
+  const engine = useInterviewEngine(config, handleEnd);
   // The interviewer's optional visual explanations (SSE, separate from the
   // call audio) — only while the call is live.
   const visuals = useInterviewVisuals(config.id, engine.callStatus === "live", engine.currentSlideId);
 
-  const coding = engine.tab === "code";
+  const workspaceOpen = engine.tab === "code";
+  const coding = workspaceOpen && !isSystemDesign;
+  const drawing = workspaceOpen && isSystemDesign;
 
   if (engine.questionsLoading) {
     return (
@@ -57,7 +76,11 @@ export function InterviewPage({ config, onEnd }) {
           slide; the camera/controls column narrows a little. */}
       <div
         className={`flex-1 grid min-h-0 ${
-          coding ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]" : "lg:grid-cols-[minmax(0,1fr)_400px]"
+          coding
+            ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]"
+            : drawing
+              ? "lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.5fr)_280px]"
+              : "lg:grid-cols-[minmax(0,1fr)_400px]"
         }`}
       >
         <div className="flex flex-col min-h-0 border-r border-white/10">
@@ -67,6 +90,7 @@ export function InterviewPage({ config, onEnd }) {
             audioTrack={engine.botAudioTrack}
             tab={engine.tab}
             onTabChange={engine.setTab}
+            workspaceLabel={isSystemDesign ? "Whiteboard" : "Code editor"}
           />
 
           <VisualPanel slide={visuals.slide} />
@@ -96,6 +120,12 @@ export function InterviewPage({ config, onEnd }) {
               running={engine.running}
               output={engine.output}
             />
+          </div>
+        )}
+
+        {drawing && (
+          <div className="flex flex-col min-h-0 min-w-0 border-r border-white/10">
+            <WhiteboardPanel whiteboard={whiteboard} />
           </div>
         )}
 
