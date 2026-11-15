@@ -40,7 +40,7 @@ const LAST_STEP = STEP_LABELS.length - 1;
 const SCHEDULE_STEP = STEP_LABELS.indexOf("Schedule");
 
 const DEFAULT_FORM = {
-  interviewTypes: ["dsa"], // slugs; only DSA is live, matches INTERVIEW_TYPES
+  interviewTypes: ["dsa"], // one slug (single-select); DSA is the default
   companyId: null,
   positionId: null,
   duration: 30,
@@ -187,15 +187,17 @@ export function ScheduleWizardPage({ onBack, onConfirm, quickStart = false }) {
           <div>
             <StepHeading
               title="What type of interview do you want to practice?"
-              hint="Pick one or more. DSA is the only live type right now — the rest are coming soon."
+              hint="Pick one. Greyed-out types are coming soon."
             />
+            {/* Single-select: an interview has exactly one type (the
+                backend takes one slug). Kept as a one-item array so the
+                review step can render it unchanged. */}
             <InterviewTypeSelector
-              multiple
               types={types}
               loading={typesLoading}
               error={typesError}
-              value={form.interviewTypes}
-              onChange={(next) => update({ interviewTypes: next })}
+              value={form.interviewTypes[0]}
+              onChange={(id) => update({ interviewTypes: [id] })}
             />
           </div>
         )}
