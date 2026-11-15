@@ -33,7 +33,14 @@ export default function App() {
   const interviews = useInterviews(auth.user);
   const nav = useAppNavigation(auth.user, auth.loading);
   const access = useInterviewAccess();
-  const [starting, setStarting] = useState(false);
+  // Id of the interview being started (its Join button spins), or null.
+  const [joiningId, setJoiningId] = useState(null);
+  // The interview the last Join was for — the access modal's "Check
+  // again" retries that same one.
+  const lastJoinRef = useRef(null);
+  // Why the last Join failed: { id, message } — shown under that
+  // interview on the dashboard. Cleared on the next attempt.
+  const [joinError, setJoinError] = useState(null);
   // One completion per interview, whatever triggers it (End button, timer).
   const endingInterviewRef = useRef(null);
 
@@ -67,33 +74,44 @@ export default function App() {
     nav.joinInterview(mapInterviewRecord(started));
   };
 
-  // "Join now": tell the backend this interview has started (source of
-  // truth for status + startedAt), then enter the room with the real
-  // record — not just local state. Only admin-allowed emails may start;
-  // anyone else gets the request-access modal instead. Returns whether
-  // the candidate actually got in.
-  const handleStartInterview = async () => {
-    if (!interviews.upcoming || starting) return false;
-    setStarting(true);
+  // "Join now" on one of the dashboard's scheduled interviews: tell the
+  // backend it has started (source of truth for status + startedAt), then
+  // enter the room with the real record — not just local state. Only
+  // admin-allowed emails may start; anyone else gets the request-access
+  // modal instead. Returns whether the candidate actually got in.
+  const handleStartInterview = async (interview = interviews.upcoming) => {
+    if (!interview || joiningId) return false;
+    lastJoinRef.current = interview;
+    setJoiningId(interview.id);
+    setJoinError(null);
     try {
-      const started = await interviewService.startInterview(interviews.upcoming.id);
+      const started = await interviewService.startInterview(interview.id);
       access.close();
       await interviews.refresh();
       nav.joinInterview(mapInterviewRecord(started));
       return true;
     } catch (err) {
-      if (err.code !== INTERVIEW_ACCESS_REQUIRED) throw err;
-      await access.prompt();
+      if (err.code === INTERVIEW_ACCESS_REQUIRED) {
+        await access.prompt();
+        return false;
+      }
+      // Anything else (voice/call service down, network, server error):
+      // say so under the interview instead of silently doing nothing. The
+      // backend's message is written for candidates (see its
+      // VOICE_SERVICE_UNAVAILABLE / CALL_SERVICE_UNAVAILABLE errors).
+      console.error("Couldn't start the interview:", err);
+      setJoinError({ id: interview.id, message: err.message || "Couldn't start the interview. Please try again." });
       return false;
     } finally {
-      setStarting(false);
+      setJoiningId(null);
     }
   };
 
-  // The modal's "Check again" (request still pending): try to join again.
+  // The modal's "Check again" (request still pending): try to join the
+  // same interview again.
   const handleRetryAccess = () =>
     access.retry(async () => {
-      if (!(await handleStartInterview())) {
+      if (!(await handleStartInterview(lastJoinRef.current || interviews.upcoming))) {
         access.setError("Still waiting for an admin to approve your request.");
       }
     });
@@ -201,7 +219,10 @@ export default function App() {
         <DashboardPage
           user={auth.user}
           history={interviews.history}
-          upcoming={interviews.upcoming}
+          scheduled={interviews.scheduled}
+          joiningId={joiningId}
+          joinError={joinError}
+          onDismissJoinError={() => setJoinError(null)}
           loading={interviews.loading}
           onSchedule={nav.goToSchedule}
           onQuickStart={nav.goToQuickStart}
